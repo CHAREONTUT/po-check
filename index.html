@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบเช็คใบ PO</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Prompt:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#3B82F6;--indigo:#6366F1;--amber:#F59E0B;--teal:#14B8A6;--coral:#F43F5E;--green:#10B981;--navy:#1E3A5F;--bg:#F0F4FF;--card:#fff;--text:#1E293B;--muted:#64748B;--border:#E2E8F0}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:220px;min-height:100vh;background:linear-gradient(160deg,#1E3A5F,#0F2444);padding:28px 16px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto}
+.logo{font-family:'Prompt',sans-serif;font-size:18px;font-weight:700;color:#fff;padding:0 12px 24px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px}
+.logo span{color:#60A5FA}
+.nav-section{font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.35);padding:16px 14px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'Sarabun',sans-serif}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:linear-gradient(90deg,#3B82F6,#6366F1);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.4)}
+.nav-badge{margin-left:auto;background:#F43F5E;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.main{flex:1;padding:32px 36px;margin-left:220px;min-height:100vh}
+.page{display:none}.page.active{display:block}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.page-title{font-family:'Prompt',sans-serif;font-size:22px;font-weight:700}
+.page-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Sarabun',sans-serif;transition:all .2s}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:linear-gradient(90deg,#3B82F6,#6366F1);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.3)}
+.btn-primary:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+.btn-green{background:linear-gradient(90deg,#10B981,#14B8A6);color:#fff}
+.btn-green:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+.btn-ghost{background:#F1F5F9;color:var(--text)}
+.btn-ghost:hover{background:#E2E8F0}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#F43F5E);display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px}
+.stat-card{background:var(--card);border-radius:16px;padding:20px 22px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;animation:fadeUp .4s ease both}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.blue::before{background:linear-gradient(90deg,#3B82F6,#60A5FA)}
+.stat-card.amber::before{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
+.stat-card.teal::before{background:linear-gradient(90deg,#14B8A6,#5EEAD4)}
+.stat-card.coral::before{background:linear-gradient(90deg,#F43F5E,#FB7185)}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:18px;margin-bottom:12px}
+.stat-card.blue .stat-icon{background:#EFF6FF}
+.stat-card.amber .stat-icon{background:#FFFBEB}
+.stat-card.teal .stat-icon{background:#F0FDFA}
+.stat-card.coral .stat-icon{background:#FFF1F2}
+.stat-num{font-family:'Prompt',sans-serif;font-size:26px;font-weight:700}
+.stat-label{font-size:12px;color:var(--muted);margin-top:2px}
+.stat-badge{position:absolute;top:18px;right:18px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+.badge-warn{background:#FEF3C7;color:#92400E}
+.badge-ok{background:#D1FAE5;color:#065F46}
+.card{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:20px}
+.card-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-body{padding:20px 22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;display:block}
+.form-input,.form-select{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:#F8FAFC;outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus{border-color:var(--blue);background:#fff}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:10px 14px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:#F8FAFC;border-bottom:1px solid var(--border)}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:#F8FAFC}
+tbody td{padding:12px 14px;border-bottom:1px solid #F1F5F9}
+.tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+.tag-blue{background:#EFF6FF;color:#1D4ED8}
+.tag-amber{background:#FFFBEB;color:#92400E}
+.tag-red{background:#FFF1F2;color:#BE123C}
+.tag-green{background:#D1FAE5;color:#065F46}
+.alert-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F1F5F9}
+.alert-row:last-child{border-bottom:none}
+.alert-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-red{background:#F43F5E;animation:pulse 1.8s ease-in-out infinite}
+.dot-amber{background:#F59E0B}
+.alert-days{margin-left:auto;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px}
+.days-red{background:#FFF1F2;color:#BE123C}
+.days-amber{background:#FFFBEB;color:#92400E}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;color:#fff;background:#1E293B}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--coral)}
+.spinner-overlay{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;place-items:center;z-index:998}
+.spinner-big{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+.empty{text-align:center;padding:40px 24px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-text{font-size:14px}
+.search-wrap{display:flex;gap:10px;margin-bottom:16px}
+.search-input{flex:1;padding:10px 14px 10px 38px;border-radius:10px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:#F8FAFC url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%2394A3B8' stroke-width='2'/%3E%3Cpath d='m21 21-4.35-4.35' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 12px center no-repeat;outline:none;transition:border-color .2s}
+.search-input:focus{border-color:var(--blue);background-color:#fff}
+.po-result{background:#F8FAFC;border-radius:12px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--border)}
+.po-result-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.emp-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #F1F5F9}
+.emp-row:last-child{border-bottom:none}
+.emp-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.emp-name{font-size:13px;font-weight:600}
+.emp-pos{font-size:11px;color:var(--muted)}
+.emp-rate{margin-left:auto;font-size:13px;font-weight:700;color:var(--green)}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.stat-card:nth-child(1){animation-delay:.05s}
+.stat-card:nth-child(2){animation-delay:.10s}
+.stat-card:nth-child(3){animation-delay:.15s}
+.stat-card:nth-child(4){animation-delay:.20s}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">PO<span>Check</span></div>
+  <div class="nav-section">เมนูหลัก</div>
+  <button class="nav-item active" onclick="nav('dashboard',this)">⊞ Dashboard</button>
+  <button class="nav-item" onclick="nav('po-search',this)">🔍 ค้นหา PO</button>
+  <button class="nav-item" onclick="nav('po-list',this)">📄 รายการ PO</button>
+  <button class="nav-item" onclick="nav('alert',this)">🔔 แจ้งเตือน <span class="nav-badge" id="alert-badge">0</span></button>
+  <div class="nav-section">OT</div>
+  <button class="nav-item" onclick="nav('ot-form',this)">⏱ บันทึก OT</button>
+  <button class="nav-item" onclick="nav('ot-list',this)">📊 รายการ OT</button>
+  <div class="nav-section">Admin</div>
+  <button class="nav-item" onclick="nav('po-form',this)">➕ เพิ่ม PO</button>
+  <button class="nav-item" onclick="nav('emp-form',this)">👤 เพิ่มพนักงาน</button>
+</aside>
+
+<main class="main">
+  <div class="spinner-overlay" id="spinner" style="display:none"><div class="spinner-big"></div></div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="topbar">
+      <div><div class="page-title">Dashboard ภาพรวม</div><div class="page-sub" id="last-updated">กำลังโหลดข้อมูล...</div></div>
+      <div class="topbar-right"><button class="btn btn-ghost" onclick="loadAll()">🔄 รีเฟรช</button><div class="avatar">ป</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat-card blue"><div class="stat-icon">📄</div><div class="stat-num" id="s-po">—</div><div class="stat-label">ใบ PO ทั้งหมด</div><div class="stat-badge badge-ok" id="s-po-sub">—</div></div>
+      <div class="stat-card amber"><div class="stat-icon">⚠️</div><div class="stat-num" id="s-alert">—</div><div class="stat-label">PO ใกล้หมดสัญญา</div><div class="stat-badge badge-warn">ภายใน 14 วัน</div></div>
+      <div class="stat-card teal"><div class="stat-icon">👥</div><div class="stat-num" id="s-emp">—</div><div class="stat-label">รายการพนักงาน</div><div class="stat-badge badge-ok">Active</div></div>
+      <div class="stat-card coral"><div class="stat-icon">⏱</div><div class="stat-num" id="s-ot">—</div><div class="stat-label">รายการ OT ทั้งหมด</div><div class="stat-badge badge-warn">รายการ</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔔 PO ใกล้หมดสัญญา</div><span style="font-size:11px;color:var(--muted)">14 วัน</span></div>
+        <div class="card-body" id="dash-alerts"><div class="empty"><div class="empty-icon">✅</div><div class="empty-text">ไม่มี PO ใกล้หมด</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">⏱ OT ล่าสุด</div></div>
+        <div class="card-body" id="dash-ot"><div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ยังไม่มีรายการ OT</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PO SEARCH (กล่อง 1) -->
+  <div class="page" id="page-po-search">
+    <div class="topbar"><div><div class="page-title">🔍 ค้นหาเลข PO</div><div class="page-sub">พิมพ์เลข PO เพื่อดูรายชื่อพนักงานในใบนั้น</div></div></div>
+    <div class="card" style="max-width:700px">
+      <div class="card-body">
+        <div class="search-wrap">
+          <input class="search-input" id="po-search-input" placeholder="พิมพ์เลข PO เช่น PO-2024-018">
+          <button class="btn btn-primary" onclick="searchPO()">ค้นหา</button>
+        </div>
+        <div id="po-search-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PO LIST -->
+  <div class="page" id="page-po-list">
+    <div class="topbar">
+      <div><div class="page-title">รายการ PO ทั้งหมด</div></div>
+      <div class="topbar-right"><button class="btn btn-primary" onclick="nav('po-form',null)">+ เพิ่ม PO</button></div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th style="padding-left:22px">เลข PO</th><th>ชื่อโปรเจค</th><th>ลูกค้า</th><th>วันสิ้นสุด</th><th>สถานะ</th></tr></thead>
+          <tbody id="po-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERT PAGE (กล่อง 2) -->
+  <div class="page" id="page-alert">
+    <div class="topbar"><div><div class="page-title">🔔 แจ้งเตือน PO ใกล้หมด</div><div class="page-sub">แสดง PO ที่หมดสัญญาภายใน 14 วัน</div></div></div>
+    <div class="card"><div class="card-body" id="alert-page"></div></div>
+  </div>
+
+  <!-- ADD PO -->
+  <div class="page" id="page-po-form">
+    <div class="topbar"><div><div class="page-title">➕ เพิ่มใบ PO ใหม่</div><div class="page-sub">เฉพาะ Admin เท่านั้น</div></div></div>
+    <div class="card" style="max-width:600px">
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">เลข PO *</label><input class="form-input" id="f-po-num" placeholder="PO-2024-021"></div>
+          <div class="form-group"><label class="form-label">ชื่อโปรเจค *</label><input class="form-input" id="f-po-project" placeholder="ชื่อโปรเจค"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">ชื่อลูกค้า</label><input class="form-input" id="f-po-client" placeholder="บริษัท..."></div>
+          <div class="form-group"><label class="form-label">มูลค่า PO (บาท)</label><input class="form-input" id="f-po-value" type="number" placeholder="0"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">วันเริ่ม PO *</label><input class="form-input" id="f-po-start" type="date"></div>
+          <div class="form-group"><label class="form-label">วันสิ้นสุด PO *</label><input class="form-input" id="f-po-end" type="date"></div>
+        </div>
+        <div class="form-group"><label class="form-label">หมายเหตุ</label><input class="form-input" id="f-po-note" placeholder="(ไม่บังคับ)"></div>
+        <button class="btn btn-primary" id="btn-po" onclick="submitPO()">💾 บันทึก PO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD EMPLOYEE -->
+  <div class="page" id="page-emp-form">
+    <div class="topbar"><div><div class="page-title">👤 เพิ่มพนักงานใน PO</div></div></div>
+    <div class="card" style="max-width:600px">
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">เลข PO *</label><input class="form-input" id="f-emp-po" placeholder="PO-2024-018"></div>
+          <div class="form-group"><label class="form-label">รหัสพนักงาน *</label><input class="form-input" id="f-emp-id" placeholder="EMP001"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">ชื่อ-นามสกุล *</label><input class="form-input" id="f-emp-name" placeholder="ชื่อ นามสกุล"></div>
+          <div class="form-group"><label class="form-label">ตำแหน่ง</label><input class="form-input" id="f-emp-pos" placeholder="Developer..."></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">แผนก</label><input class="form-input" id="f-emp-dept" placeholder="IT, Design..."></div>
+          <div class="form-group"><label class="form-label">เรทเงิน (บาท/เดือน)</label><input class="form-input" id="f-emp-rate" type="number" placeholder="0"></div>
+        </div>
+        <button class="btn btn-primary" id="btn-emp" onclick="submitEmployee()">💾 บันทึกพนักงาน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OT FORM (กล่อง 3) -->
+  <div class="page" id="page-ot-form">
+    <div class="topbar"><div><div class="page-title">⏱ บันทึก OT</div></div></div>
+    <div class="card" style="max-width:600px">
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">เลข PO *</label><input class="form-input" id="f-ot-po" placeholder="PO-2024-018"></div>
+          <div class="form-group"><label class="form-label">รหัสพนักงาน *</label><input class="form-input" id="f-ot-empid" placeholder="EMP001" oninput="lookupEmp()"></div>
+        </div>
+        <div class="form-group"><label class="form-label">ชื่อพนักงาน (อ้างอิง)</label><input class="form-input" id="f-ot-empname" placeholder="จะดึงมาอัตโนมัติ" readonly style="background:#F1F5F9"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">เลข PO_OT *</label><input class="form-input" id="f-ot-poot" placeholder="OT-1234"></div>
+          <div class="form-group"><label class="form-label">วันที่ PO_OT *</label><input class="form-input" id="f-ot-date" type="date"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">OT จ่ายพนักงาน (บาท) *</label><input class="form-input" id="f-ot-pay" type="number" placeholder="0.00"></div>
+          <div class="form-group"><label class="form-label">OT เรียกเก็บลูกค้า (บาท) *</label><input class="form-input" id="f-ot-bill" type="number" placeholder="0.00"></div>
+        </div>
+        <button class="btn btn-primary" id="btn-ot" onclick="submitOT()">💾 บันทึก OT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OT LIST (กล่อง 4) -->
+  <div class="page" id="page-ot-list">
+    <div class="topbar">
+      <div><div class="page-title">📊 รายการ OT ทั้งหมด</div></div>
+      <div class="topbar-right">
+        <input class="form-input" id="ot-filter" placeholder="🔍 กรองชื่อ/รหัสพนักงาน" style="width:220px" oninput="renderOTTable()">
+        <button class="btn btn-green" onclick="exportCSV()">📥 Export Excel</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th style="padding-left:22px">เลข PO</th><th>รหัสพนักงาน</th><th>ชื่อพนักงาน</th><th>เลข PO_OT</th><th>วันที่</th><th>จ่ายพนักงาน</th><th>เรียกเก็บลูกค้า</th><th>กำไร</th></tr></thead>
+          <tbody id="ot-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = ''  // same origin — Railway serves both frontend & backend
+
+// ── Data cache ────────────────────────────────────────────────
+let CACHE = { po: [], emp: [], ot: [], alerts: [] }
+
+// ── Navigation ────────────────────────────────────────────────
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.getElementById('page-' + id).classList.add('active')
+  if (el) el.classList.add('active')
+}
+
+// ── API call ──────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } }
+  if (body) opts.body = JSON.stringify(body)
+  const r = await fetch(API + path, opts)
+  return r.json()
+}
+
+// ── Load all ──────────────────────────────────────────────────
+async function loadAll() {
+  spinner(true)
+  try {
+    const [po, emp, ot, alerts] = await Promise.all([
+      api('GET', '/api/po'),
+      api('GET', '/api/employees'),
+      api('GET', '/api/ot'),
+      api('GET', '/api/alerts')
+    ])
+    CACHE.po     = po.data     || []
+    CACHE.emp    = emp.data    || []
+    CACHE.ot     = ot.data     || []
+    CACHE.alerts = alerts.data || []
+    renderAll()
+    document.getElementById('last-updated').textContent =
+      'อัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH')
+  } catch(e) {
+    toast('โหลดข้อมูลไม่ได้ — ตรวจสอบ Server', 'error')
+  }
+  spinner(false)
+}
+
+function renderAll() {
+  renderStats()
+  renderDashAlerts()
+  renderDashOT()
+  renderPOTable()
+  renderAlertPage()
+  renderOTTable()
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function renderStats() {
+  const active = CACHE.po.filter(r => new Date(r[4]) >= new Date())
+  document.getElementById('s-po').textContent     = CACHE.po.length
+  document.getElementById('s-po-sub').textContent = `ใช้งาน ${active.length}`
+  document.getElementById('s-alert').textContent  = CACHE.alerts.length
+  document.getElementById('s-emp').textContent    = CACHE.emp.length
+  document.getElementById('s-ot').textContent     = CACHE.ot.length
+  document.getElementById('alert-badge').textContent = CACHE.alerts.length
+}
+
+// ── Dashboard alerts ──────────────────────────────────────────
+function renderDashAlerts() {
+  const el = document.getElementById('dash-alerts')
+  if (!CACHE.alerts.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">ไม่มี PO ใกล้หมด</div></div>`
+    return
+  }
+  el.innerHTML = CACHE.alerts.slice(0,4).map(a => `
+    <div class="alert-row">
+      <div class="alert-dot ${a.daysLeft <= 7 ? 'dot-red' : 'dot-amber'}"></div>
+      <div><div style="font-size:13px;font-weight:700">${a.po}</div><div style="font-size:11px;color:var(--muted)">${a.project}</div></div>
+      <div class="alert-days ${a.daysLeft <= 7 ? 'days-red' : 'days-amber'}">เหลือ ${a.daysLeft} วัน</div>
+    </div>`).join('')
+}
+
+// ── Dashboard OT recent ───────────────────────────────────────
+function renderDashOT() {
+  const el = document.getElementById('dash-ot')
+  const recent = [...CACHE.ot].reverse().slice(0,4)
+  if (!recent.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ยังไม่มีรายการ OT</div></div>`
+    return
+  }
+  el.innerHTML = recent.map(r => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F1F5F9">
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${r[1]||''} — ${r[2]||''}</div><div style="font-size:11px;color:var(--muted)">${r[0]||''} · ${r[4]||''}</div></div>
+      <div style="font-size:12px;font-weight:700;color:var(--green)">฿${Number(r[5]||0).toLocaleString()}</div>
+    </div>`).join('')
+}
+
+// ── PO Search (กล่อง 1) ───────────────────────────────────────
+async function searchPO() {
+  const q = document.getElementById('po-search-input').value.trim()
+  if (!q) return
+  spinner(true)
+  const res = await api('GET', `/api/employees/${encodeURIComponent(q)}`)
+  spinner(false)
+  const el = document.getElementById('po-search-result')
+  if (!res.ok || !res.data.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">ไม่พบพนักงานใน PO นี้</div></div>`
+    return
+  }
+  const colors = ['linear-gradient(135deg,#3B82F6,#6366F1)','linear-gradient(135deg,#F59E0B,#F43F5E)','linear-gradient(135deg,#14B8A6,#10B981)','linear-gradient(135deg,#8B5CF6,#EC4899)']
+  el.innerHTML = `
+    <div class="po-result">
+      <div class="po-result-title">พนักงานใน ${q} — ${res.data.length} คน</div>
+      ${res.data.map((r,i) => `
+        <div class="emp-row">
+          <div class="emp-av" style="background:${colors[i%colors.length]}">${(r[2]||'?')[0]}</div>
+          <div><div class="emp-name">${r[2]||''}</div><div class="emp-pos">${r[3]||''} · ${r[4]||''}</div></div>
+          <div class="emp-rate">฿${Number(r[5]||0).toLocaleString()}</div>
+        </div>`).join('')}
+    </div>`
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('po-search-input') === document.activeElement) searchPO()
+})
+
+// ── PO Table ──────────────────────────────────────────────────
+function renderPOTable() {
+  const today = new Date()
+  const rows = CACHE.po.map(r => {
+    const diff = Math.ceil((new Date(r[4]) - today) / 86400000)
+    const tag = diff < 0 ? `<span class="tag tag-red">หมดแล้ว</span>`
+      : diff <= 14 ? `<span class="tag tag-amber">ใกล้หมด (${diff}ว)</span>`
+      : `<span class="tag tag-green">ปกติ</span>`
+    return `<tr><td style="padding-left:22px;font-weight:600">${r[0]||''}</td><td>${r[1]||''}</td><td>${r[2]||''}</td><td style="color:var(--muted)">${r[4]||''}</td><td>${tag}</td></tr>`
+  }).join('')
+  document.getElementById('po-table').innerHTML = rows || `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">ยังไม่มีข้อมูล PO</td></tr>`
+}
+
+// ── Alert Page (กล่อง 2) ──────────────────────────────────────
+function renderAlertPage() {
+  const el = document.getElementById('alert-page')
+  if (!CACHE.alerts.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">ไม่มี PO ใกล้หมดสัญญา</div></div>`
+    return
+  }
+  el.innerHTML = CACHE.alerts.map(a => `
+    <div class="alert-row">
+      <div class="alert-dot ${a.daysLeft <= 7 ? 'dot-red' : 'dot-amber'}"></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700">${a.po} — ${a.project}</div>
+        <div style="font-size:11px;color:var(--muted)">ลูกค้า: ${a.client||'—'} · วันสิ้นสุด: ${a.endDate}</div>
+      </div>
+      <div class="alert-days ${a.daysLeft <= 7 ? 'days-red' : 'days-amber'}">เหลือ ${a.daysLeft} วัน</div>
+    </div>`).join('')
+}
+
+// ── OT Table (กล่อง 4) ───────────────────────────────────────
+function renderOTTable() {
+  const filter = (document.getElementById('ot-filter').value||'').toLowerCase()
+  const rows = CACHE.ot.filter(r =>
+    !filter || (r[1]||'').toLowerCase().includes(filter) || (r[2]||'').toLowerCase().includes(filter)
+  ).map(r => `
+    <tr>
+      <td style="padding-left:22px;font-weight:600">${r[0]||''}</td>
+      <td>${r[1]||''}</td><td>${r[2]||''}</td><td>${r[3]||''}</td>
+      <td style="color:var(--muted)">${r[4]||''}</td>
+      <td style="color:var(--green);font-weight:700">฿${Number(r[5]||0).toLocaleString()}</td>
+      <td style="color:var(--coral);font-weight:700">฿${Number(r[6]||0).toLocaleString()}</td>
+      <td style="color:var(--blue);font-weight:700">฿${Number(r[7]||0).toLocaleString()}</td>
+    </tr>`).join('')
+  document.getElementById('ot-table').innerHTML = rows || `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีข้อมูล</td></tr>`
+}
+
+// ── Auto-lookup emp name ──────────────────────────────────────
+function lookupEmp() {
+  const id = document.getElementById('f-ot-empid').value.trim().toUpperCase()
+  const emp = CACHE.emp.find(r => (r[1]||'').toUpperCase() === id)
+  document.getElementById('f-ot-empname').value = emp ? emp[2] : ''
+}
+
+// ── Submit PO ─────────────────────────────────────────────────
+async function submitPO() {
+  const body = {
+    poNum:     document.getElementById('f-po-num').value.trim(),
+    project:   document.getElementById('f-po-project').value.trim(),
+    client:    document.getElementById('f-po-client').value.trim(),
+    startDate: document.getElementById('f-po-start').value,
+    endDate:   document.getElementById('f-po-end').value,
+    value:     document.getElementById('f-po-value').value,
+    note:      document.getElementById('f-po-note').value.trim()
+  }
+  if (!body.poNum||!body.project||!body.startDate||!body.endDate) { toast('กรุณากรอกข้อมูลที่จำเป็น (*)','error'); return }
+  setLoading('btn-po', true)
+  const res = await api('POST', '/api/po', body)
+  setLoading('btn-po', false)
+  if (res.ok) { toast('เพิ่ม PO สำเร็จ ✅','success'); clearForm(['f-po-num','f-po-project','f-po-client','f-po-start','f-po-end','f-po-value','f-po-note']); loadAll() }
+  else toast(res.error||'เกิดข้อผิดพลาด','error')
+}
+
+// ── Submit Employee ───────────────────────────────────────────
+async function submitEmployee() {
+  const body = {
+    poNum:    document.getElementById('f-emp-po').value.trim(),
+    empId:    document.getElementById('f-emp-id').value.trim(),
+    name:     document.getElementById('f-emp-name').value.trim(),
+    position: document.getElementById('f-emp-pos').value.trim(),
+    dept:     document.getElementById('f-emp-dept').value.trim(),
+    rate:     document.getElementById('f-emp-rate').value
+  }
+  if (!body.poNum||!body.empId||!body.name) { toast('กรุณากรอกข้อมูลที่จำเป็น (*)','error'); return }
+  setLoading('btn-emp', true)
+  const res = await api('POST', '/api/employees', body)
+  setLoading('btn-emp', false)
+  if (res.ok) { toast('เพิ่มพนักงานสำเร็จ ✅','success'); clearForm(['f-emp-po','f-emp-id','f-emp-name','f-emp-pos','f-emp-dept','f-emp-rate']); loadAll() }
+  else toast(res.error||'เกิดข้อผิดพลาด','error')
+}
+
+// ── Submit OT ─────────────────────────────────────────────────
+async function submitOT() {
+  const body = {
+    poNum:   document.getElementById('f-ot-po').value.trim(),
+    empId:   document.getElementById('f-ot-empid').value.trim(),
+    empName: document.getElementById('f-ot-empname').value.trim(),
+    poOt:    document.getElementById('f-ot-poot').value.trim(),
+    otDate:  document.getElementById('f-ot-date').value,
+    otPay:   document.getElementById('f-ot-pay').value,
+    otBill:  document.getElementById('f-ot-bill').value
+  }
+  if (!body.poNum||!body.empId||!body.poOt||!body.otDate||!body.otPay||!body.otBill) { toast('กรุณากรอกข้อมูลให้ครบ','error'); return }
+  setLoading('btn-ot', true)
+  const res = await api('POST', '/api/ot', body)
+  setLoading('btn-ot', false)
+  if (res.ok) { toast('บันทึก OT สำเร็จ ✅','success'); clearForm(['f-ot-po','f-ot-empid','f-ot-empname','f-ot-poot','f-ot-date','f-ot-pay','f-ot-bill']); loadAll() }
+  else toast(res.error||'เกิดข้อผิดพลาด','error')
+}
+
+// ── Export CSV ────────────────────────────────────────────────
+function exportCSV() {
+  const filter = (document.getElementById('ot-filter').value||'').toLowerCase()
+  const rows = CACHE.ot.filter(r => !filter || (r[1]||'').toLowerCase().includes(filter) || (r[2]||'').toLowerCase().includes(filter))
+  if (!rows.length) { toast('ไม่มีข้อมูลที่จะ Export','error'); return }
+  const header = ['เลข PO','รหัสพนักงาน','ชื่อพนักงาน','เลข PO_OT','วันที่','OT จ่ายพนักงาน','OT เรียกเก็บลูกค้า','กำไร OT']
+  const csv = [header,...rows].map(r => r.map(v=>`"${v||''}"`).join(',')).join('\n')
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'})
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `OT_Export_${new Date().toISOString().slice(0,10)}.csv`
+  a.click()
+  toast('Export สำเร็จ ✅','success')
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function toast(msg, type='') {
+  const t = document.getElementById('toast')
+  t.textContent = msg; t.className = `toast show ${type}`
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'),3000)
+}
+function spinner(on) { document.getElementById('spinner').style.display = on?'grid':'none' }
+function setLoading(id, on) {
+  const b = document.getElementById(id)
+  b.disabled = on
+  b.textContent = on ? 'กำลังบันทึก...' : b.textContent.replace('กำลังบันทึก...','💾 บันทึก')
+}
+function clearForm(ids) { ids.forEach(id=>{ const el=document.getElementById(id); if(el)el.value='' }) }
+
+// ── Init ──────────────────────────────────────────────────────
+loadAll()
+</script>
+</body>
+</html>
