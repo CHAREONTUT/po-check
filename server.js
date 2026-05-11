@@ -156,5 +156,5 @@ app.get('/api/health', (req, res) => res.json({ ok: true, message: 'PO System ru
 // ── Catch-all → serve frontend ──────────────────────────────────
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')))
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`✅ PO System running on port ${PORT}`))
