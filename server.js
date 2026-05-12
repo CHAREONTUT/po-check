@@ -158,18 +158,32 @@ app.post('/api/po/bulk', auth, async (req,res)=>{
     const {rows}=req.body
     if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
 
-    // Walk rows; carry forward PO No./DM when blank (merged-cell pattern)
+    // Helper: safely convert any value to trimmed string
+    const str = v => (v===null||v===undefined) ? '' : String(v).trim()
+
+    // Walk rows; carry forward PO No./DM/dates when blank (merged-cell / carry-forward pattern)
     const grouped={}
     let lastKey='', lastDM='', lastStart='', lastEnd=''
     for(const r of rows){
-      const rawKey=String(r['PO No.']||r['PO_No']||r['poNo']||'').trim()
+      // Accept any header variant and numeric PO numbers
+      const rawKey = str(r['PO No.'] ?? r['PO_No'] ?? r['PONo'] ?? r['po no.'] ?? r['poNo'] ?? '')
       const key = rawKey || lastKey
       if(!key) continue
-      if(rawKey){ lastKey=rawKey; lastDM=String(r['DM']||'').trim(); lastStart=String(r['Start']||'').trim(); lastEnd=String(r['End']||'').trim() }
-      if(!grouped[key]) grouped[key]={client:lastDM,start:lastStart,end:lastEnd,names:[]}
-      // Update DM/dates if provided in this row
-      if(r['DM']&&String(r['DM']).trim()) grouped[key].client=String(r['DM']).trim()
-      const name=String(r['Name']||r['name']||'').trim()
+
+      if(rawKey){
+        lastKey   = rawKey
+        lastDM    = str(r['DM']    ?? r['dm']    ?? '')
+        lastStart = str(r['Start'] ?? r['start'] ?? r['START'] ?? '')
+        lastEnd   = str(r['End']   ?? r['end']   ?? r['END']   ?? '')
+      }
+
+      if(!grouped[key]) grouped[key]={client:lastDM, start:lastStart, end:lastEnd, names:[]}
+
+      // Allow DM/dates to be updated from any row in the group
+      const dm = str(r['DM'] ?? r['dm'] ?? '')
+      if(dm) grouped[key].client = dm
+
+      const name = str(r['Name'] ?? r['name'] ?? r['NAME'] ?? '')
       if(name) grouped[key].names.push(name)
     }
 
