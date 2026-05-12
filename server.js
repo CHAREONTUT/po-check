@@ -161,6 +161,13 @@ app.post('/api/po/bulk', auth, async (req,res)=>{
     // Helper: safely convert any value to trimmed string
     const str = v => (v===null||v===undefined) ? '' : String(v).trim()
 
+    // DEBUG: log first 3 rows to see what keys/values come in
+    console.log('BULK rows received:', rows.length)
+    if(rows.length>0){
+      console.log('BULK row[0] keys:', Object.keys(rows[0]))
+      console.log('BULK row[0] values:', JSON.stringify(rows[0]))
+    }
+
     // Walk rows; carry forward PO No./DM/dates when blank (merged-cell / carry-forward pattern)
     const grouped={}
     let lastKey='', lastDM='', lastStart='', lastEnd=''
