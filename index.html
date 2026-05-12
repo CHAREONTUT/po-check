@@ -844,11 +844,17 @@ function processBulk(file){
 }
 async function submitBulk(){
   if(!BULK_DATA.length){toast('ไม่มีข้อมูล','error');return}
+  // DEBUG: show what we're sending
+  const firstRow = BULK_DATA[0]
+  const keys = Object.keys(firstRow).join(', ')
+  const vals = Object.values(firstRow).join(' | ')
+  toast(`Debug: ${BULK_DATA.length} แถว  Keys: ${keys}`,'')
+  await new Promise(r=>setTimeout(r,2000)) // wait 2s so user can see toast
   setLoad('btn-bulk',true)
   const r=await api('POST','/api/po/bulk',{rows:BULK_DATA})
   setLoad('btn-bulk',false)
   if(r.ok){toast(`สำเร็จ! สร้าง ${r.created} แก้ไข ${r.updated} PO ✅`,'success');BULK_DATA=[];document.getElementById('bulk-preview').style.display='none';document.getElementById('bulk-file').value='';loadAll()}
-  else toast(r.error||'เกิดข้อผิดพลาด','error')
+  else toast(`Error: ${r.error||'เกิดข้อผิดพลาด'} (${JSON.stringify(r)})`,'error')
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -861,7 +867,7 @@ function dlCSV(rows,fn){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}))
   a.download=fn;a.click()
 }
-function toast(m,t=''){const el=document.getElementById('toast');el.textContent=m;el.className=`toast show ${t}`;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000)}
+function toast(m,t=''){const el=document.getElementById('toast');el.textContent=m;el.className=`toast show ${t}`;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),6000)}
 function spin(on){document.getElementById('spinner').style.display=on?'grid':'none'}
 function setLoad(id,on){const b=document.getElementById(id);b.disabled=on;b.textContent=on?'กำลังบันทึก...':'💾 บันทึก'}
 function closeM(id){document.getElementById(id).classList.remove('show')}
