@@ -827,26 +827,40 @@ function processBulk(file){
     reader.onload=e=>{
       const wb=XLSX.read(e.target.result,{type:'array'})
       const ws=wb.Sheets[wb.SheetNames[0]]
-      // Try to find header row by looking for 'PO No.' or 'Name' in first 5 rows
+      // Scan first 6 rows to find the header row containing 'PO No.' or 'Name'
       let headerRow=0
       const range=XLSX.utils.decode_range(ws['!ref']||'A1:F10')
-      for(let r=0;r<=Math.min(4,range.e.r);r++){
-        const cellA=ws[XLSX.utils.encode_cell({r,c:0})]
-        const cellF=ws[XLSX.utils.encode_cell({r,c:5})]
-        const valA=cellA?String(cellA.v||'').trim():''
-        const valF=cellF?String(cellF.v||'').trim():''
-        if(valA==='PO No.'||valF==='Name'||valA==='PO_No'){headerRow=r;break}
+      for(let r=0;r<=Math.min(5,range.e.r);r++){
+        let rowText=''
+        for(let c=0;c<=5;c++){
+          const cell=ws[XLSX.utils.encode_cell({r,c})]
+          if(cell) rowText+=String(cell.v||'').trim()+' '
+        }
+        if(rowText.includes('PO No')||rowText.includes('PO_No')||rowText.includes('Name')){
+          headerRow=r; break
+        }
       }
+      // Parse with found header row
       const data=XLSX.utils.sheet_to_json(ws,{defval:'',range:headerRow})
-      BULK_DATA=data
+      // Normalize keys: trim and handle variations
+      const normalized=data.map(row=>{
+        const nr={}
+        for(const [k,v] of Object.entries(row)){
+          nr[String(k).trim()]=v
+        }
+        return nr
+      })
+      BULK_DATA=normalized
       const prev=document.getElementById('bulk-preview-body')
-      prev.innerHTML=data.slice(0,10).map(r=>`<tr>
-        <td style="font-weight:600;color:var(--blue)">${r['PO No.']||r['PO_No']||r['poNo']||''}</td>
-        <td>${r['DM']||''}</td><td>${r['Start']||''}</td>
-        <td>${r['End']||''}</td><td style="text-align:center">${r['Item']||r['item']||''}</td>
+      prev.innerHTML=normalized.slice(0,10).map(r=>`<tr>
+        <td style="font-weight:600;color:var(--blue)">${r['PO No.']||r['PO_No']||r['PONo']||''}</td>
+        <td>${r['DM']||''}</td>
+        <td>${r['Start']||''}</td>
+        <td>${r['End']||''}</td>
+        <td style="text-align:center">${r['Item']||r['item']||''}</td>
         <td>${r['Name']||r['name']||''}</td>
       </tr>`).join('')
-      document.getElementById('bulk-preview-title').textContent=`พบ ${data.length} แถว (แสดง 10 แรก)`
+      document.getElementById('bulk-preview-title').textContent=`พบ ${normalized.length} แถว (แสดง 10 แรก)`
       document.getElementById('bulk-preview').style.display=''
     }
     reader.readAsArrayBuffer(file)
@@ -854,17 +868,16 @@ function processBulk(file){
 }
 async function submitBulk(){
   if(!BULK_DATA.length){toast('ไม่มีข้อมูล','error');return}
-  // DEBUG: show what we're sending
-  const firstRow = BULK_DATA[0]
-  const keys = Object.keys(firstRow).join(', ')
-  const vals = Object.values(firstRow).join(' | ')
-  toast(`Debug: ${BULK_DATA.length} แถว  Keys: ${keys}`,'')
-  await new Promise(r=>setTimeout(r,2000)) // wait 2s so user can see toast
   setLoad('btn-bulk',true)
   const r=await api('POST','/api/po/bulk',{rows:BULK_DATA})
   setLoad('btn-bulk',false)
-  if(r.ok){toast(`สำเร็จ! สร้าง ${r.created} แก้ไข ${r.updated} PO ✅`,'success');BULK_DATA=[];document.getElementById('bulk-preview').style.display='none';document.getElementById('bulk-file').value='';loadAll()}
-  else toast(`Error: ${r.error||'เกิดข้อผิดพลาด'} (${JSON.stringify(r)})`,'error')
+  if(r.ok){
+    toast(`สำเร็จ! สร้าง ${r.created} แก้ไข ${r.updated} PO ✅`,'success')
+    BULK_DATA=[]
+    document.getElementById('bulk-preview').style.display='none'
+    document.getElementById('bulk-file').value=''
+    loadAll()
+  } else toast(`เกิดข้อผิดพลาด: ${r.error||'ไม่ทราบสาเหตุ'}`,'error')
 }
 
 // ── Helpers ───────────────────────────────────────────────────
