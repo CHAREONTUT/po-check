@@ -1100,7 +1100,7 @@ async function loadPending(){
   tbody.innerHTML=rows2.length?rows2.map(function(g){
     var months=g.months.map(function(m){return'<span class="tag t-red" style="margin:1px">'+m+'</span>'}).join('')
     return'<tr>'+
-      '<td style="padding-left:14px;font-weight:600;cursor:pointer;color:var(--blue)" onclick="showPendingPODetail(this.dataset.po)" data-po="'+g.poNum+'">'+g.poNum+'</td>'+'
+      '<td style="padding-left:14px;font-weight:600;cursor:pointer;color:var(--blue)" onclick="showPendingPODetail(this.dataset.po)" data-po="'+g.poNum+'">'+g.poNum+'</td>'+
       '<td style="color:var(--muted);font-size:12px">'+(g.client||'—')+'</td>'+
       '<td>'+g.empName+'</td>'+
       '<td style="font-size:12px;color:var(--muted)">'+(g.empStart||'—')+' → '+(g.empEnd||'—')+'</td>'+
