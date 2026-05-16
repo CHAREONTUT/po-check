@@ -19,6 +19,18 @@ const USERS = [
   { name: process.env.USER3_NAME || 'ผู้ใช้ 3',  email: process.env.USER3_EMAIL || 'u3@co.com',    password: process.env.USER3_PASS || 'user1234' },
 ]
 
+// Parse dates in D/M/YYYY, DD/MM/YYYY, or YYYY-MM-DD format
+function parseDate(str){
+  if(!str) return null
+  str=String(str).trim()
+  // YYYY-MM-DD
+  if(/^\d{4}-\d{1,2}-\d{1,2}/.test(str)) return new Date(str)
+  // D/M/YYYY or DD/MM/YYYY (Thai format)
+  const m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+  if(m) return new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]))
+  return new Date(str)
+}
+
 function b64(s){ return Buffer.from(s).toString('base64url') }
 function signToken(p){
   const h=b64(JSON.stringify({alg:'HS256',typ:'JWT'}))
@@ -117,7 +129,7 @@ app.get('/api/po/expired/list',auth,async(req,res)=>{
   try{
     const rows=await readSheet('PO_MASTER!A2:F')
     const today=new Date()
-    const expired=rows.map((r,i)=>({rowIndex:i+2,po:r[0],client:r[1],startDate:r[2],endDate:r[3],daysExpired:Math.ceil((today-new Date(r[3]))/86400000)}))
+    const expired=rows.map((r,i)=>({rowIndex:i+2,po:r[0],client:r[1],startDate:r[2],endDate:r[3],daysExpired:Math.ceil((today-parseDate(r[3]))/86400000)}))
       .filter(a=>a.endDate&&a.daysExpired>0).sort((a,b)=>a.daysExpired-b.daysExpired)
     res.json({ok:true,data:expired})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
@@ -306,7 +318,7 @@ app.get('/api/alerts',auth,async(req,res)=>{
   try{
     const rows=await readSheet('PO_MASTER!A2:D')
     const today=new Date()
-    res.json({ok:true,data:rows.map(r=>({po:r[0],client:r[1],endDate:r[3],daysLeft:Math.ceil((new Date(r[3])-today)/86400000)})).filter(a=>a.endDate&&a.daysLeft>=0&&a.daysLeft<=21).sort((a,b)=>a.daysLeft-b.daysLeft)})
+    res.json({ok:true,data:rows.map(r=>({po:r[0],client:r[1],endDate:r[3],daysLeft:Math.ceil((parseDate(r[3])-today)/86400000)})).filter(a=>a.endDate&&a.daysLeft>=0&&a.daysLeft<=21).sort((a,b)=>a.daysLeft-b.daysLeft)})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
