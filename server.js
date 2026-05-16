@@ -113,8 +113,10 @@ async function log(user,action,detail){
 app.post('/api/auth/login',async(req,res)=>{
   const{email,password}=req.body
   if(!email||!password) return res.status(400).json({ok:false,error:'กรุณากรอกข้อมูล'})
-  const u=USERS.find(u=>u.email.toLowerCase()===email.toLowerCase()&&u.password===password)
-  if(!u) return res.status(401).json({ok:false,error:'Email หรือ Password ไม่ถูกต้อง'})
+  const byEmail=USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())
+  if(!byEmail) return res.status(401).json({ok:false,error:'ไม่พบ Email นี้ในระบบ กรุณาตรวจสอบอีเมลอีกครั้ง'})
+  if(byEmail.password!==password) return res.status(401).json({ok:false,error:'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบรหัสผ่านอีกครั้ง'})
+  const u=byEmail
   await log({name:u.name,email:u.email},'LOGIN','เข้าสู่ระบบ')
   res.json({ok:true,token:signToken({name:u.name,email:u.email}),user:{name:u.name,email:u.email}})
 })
