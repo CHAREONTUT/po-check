@@ -195,8 +195,11 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 
 <div id="login-wrap" class="login-wrap">
   <div class="login-card">
-    <div class="login-logo">PO<span>Check</span></div>
-    <div class="login-sub">ระบบเช็คใบ PO และ OT</div>
+    <div style="text-align:center;margin-bottom:12px">
+      <img src="logo.jpg" alt="CT Logo" style="width:96px;height:96px;object-fit:contain;border-radius:16px;box-shadow:0 4px 16px rgba(59,130,246,0.15)">
+    </div>
+    <div class="login-logo" style="font-size:20px">PO<span>Check</span> <span style="font-size:13px;font-weight:500;color:var(--muted)">by CT</span></div>
+    <div class="login-sub">ระบบเช็คใบ PO และ OT · CHAREON TUT</div>
     <div id="login-err" class="login-err"></div>
     <div class="fl"><label>อีเมล</label><input class="fi" id="l-em" type="email" placeholder="your@email.com" autofocus></div>
     <div class="fl"><label>รหัสผ่าน</label><input class="fi" id="l-pw" type="password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()"></div>
@@ -214,7 +217,13 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
   <button class="hamburger" onclick="toggleSB()"><span></span><span></span><span></span></button>
 
   <aside class="sidebar" id="sidebar">
-    <div class="logo">PO<span>Check</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:0 12px 18px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px">
+      <img src="logo.jpg" alt="CT" style="width:36px;height:36px;object-fit:contain;border-radius:8px;background:#fff;flex-shrink:0">
+      <div>
+        <div style="font-family:'Prompt',sans-serif;font-size:16px;font-weight:700;color:#fff;line-height:1.2">PO<span style="color:#60A5FA">Check</span></div>
+        <div style="font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.05em">CHAREON TUT</div>
+      </div>
+    </div>
     <div class="user-box"><div class="user-name" id="sb-name">—</div><div class="user-email" id="sb-email">—</div></div>
     <div class="nav-sec">เมนูหลัก</div>
     <button class="nav-item active" onclick="nav('dash',this)">⊞ Dashboard</button>
