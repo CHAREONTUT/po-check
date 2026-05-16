@@ -631,7 +631,7 @@ function renderDashEAS(){
 }
 
 function renderStats(){
-  const today=new Date(),active=C.po.filter(r=>new Date(r[3])>=today)
+  const today=new Date(),active=C.po.filter(r=>parseDate(r[3])>=today)
   document.getElementById('s-po').textContent=C.po.length
   document.getElementById('s-po-s').textContent=`ใช้งาน ${active.length}`
   document.getElementById('s-al').textContent=C.alerts.length
@@ -685,7 +685,7 @@ function renderPOT(){
   const today=new Date(),f=(document.getElementById('po-s').value||'').toLowerCase()
   const rows=C.po.filter(r=>!f||(r[0]||'').toLowerCase().includes(f)||(r[1]||'').toLowerCase().includes(f))
   document.getElementById('po-tbody').innerHTML=rows.length?rows.map(r=>{
-    const diff=Math.ceil((new Date(r[3])-today)/86400000)
+    const diff=Math.ceil((parseDate(r[3])-today)/86400000)
     const st=diff<0?`<span class="tag t-red">หมดแล้ว</span>`:diff<=14?`<span class="tag t-amber">ใกล้หมด</span>`:`<span class="tag t-green">ปกติ</span>`
     const ec=C.emp.filter(e=>e[0]===r[0]).length
     return`<tr>
@@ -1369,6 +1369,15 @@ function g(i){return document.getElementById(i)?.value?.trim()||''}
 function num(v){return Number(v||0).toLocaleString()}
 function enc(s){return encodeURIComponent(s)}
 function today(){return new Date().toISOString().slice(0,10)}
+// Parse D/M/YYYY, DD/MM/YYYY or YYYY-MM-DD
+function parseDate(str){
+  if(!str) return new Date('invalid')
+  str=String(str).trim()
+  if(/^\d{4}-\d{1,2}-\d{1,2}/.test(str)) return new Date(str)
+  const m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+  if(m) return new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]))
+  return new Date(str)
+}
 function toast(m,t){var el=document.getElementById('toast');el.textContent=m;el.className='toast show '+(t||'');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show')},4000)}
 function spin(on){document.getElementById('spinner').style.display=on?'grid':'none'}
 function setLoad(id,on){var b=document.getElementById(id);if(!b)return;b.disabled=on;b.textContent=on?'กำลังบันทึก...':'💾 บันทึก'}
