@@ -113,6 +113,15 @@ app.get('/api/po',auth,async(req,res)=>{
   try{res.json({ok:true,data:await readSheet('PO_MASTER!A2:F')})}
   catch(e){res.status(500).json({ok:false,error:e.message})}
 })
+app.get('/api/po/expired/list',auth,async(req,res)=>{
+  try{
+    const rows=await readSheet('PO_MASTER!A2:F')
+    const today=new Date()
+    const expired=rows.map((r,i)=>({rowIndex:i+2,po:r[0],client:r[1],startDate:r[2],endDate:r[3],daysExpired:Math.ceil((today-new Date(r[3]))/86400000)}))
+      .filter(a=>a.endDate&&a.daysExpired>0).sort((a,b)=>a.daysExpired-b.daysExpired)
+    res.json({ok:true,data:expired})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
 app.get('/api/po/:poNum',auth,async(req,res)=>{
   try{
     const rows=await readSheet('PO_MASTER!A2:F')
@@ -170,6 +179,18 @@ app.post('/api/employees',auth,async(req,res)=>{
     res.json({ok:true})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
+app.put('/api/employees/:rowIdx',auth,async(req,res)=>{
+  try{
+    const sheetRow=parseInt(req.params.rowIdx)
+    const rows=await readSheet('PO_EMPLOYEES!A2:F')
+    const row=rows[sheetRow-2]
+    if(!row) return res.status(404).json({ok:false,error:'ไม่พบรายการ'})
+    const{name,start,end}=req.body
+    await updateRow('PO_EMPLOYEES',sheetRow,[row[0],name||row[1],start||row[2],end||row[3],req.user.name,new Date().toLocaleString('th-TH')])
+    await log(req.user,'UPDATE_EMPLOYEE',`แก้ไขพนักงาน ${name||row[1]} ใน PO ${row[0]}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
 app.delete('/api/employees/:rowIdx',auth,async(req,res)=>{
   try{
     const sheetRow=parseInt(req.params.rowIdx)
@@ -223,10 +244,11 @@ app.get('/api/ot',auth,async(req,res)=>{
 })
 app.post('/api/ot',auth,async(req,res)=>{
   try{
-    const{poNum,empName,poOt,docDate,otPay,otBill}=req.body
+    const{poNum,empName,poOt,docDate,otPay,otBill,otMonth}=req.body
     if(!poNum||!empName||!docDate||!otPay||!otBill) return res.status(400).json({ok:false,error:'กรุณากรอกข้อมูลที่บังคับ (*)'})
-    await appendRow('OT',[poNum,empName,poOt||'',docDate,otPay,otBill,Number(otBill)-Number(otPay),docDate.slice(0,7),'ยังไม่เรียกเก็บ',req.user.name])
-    await log(req.user,'CREATE_OT',`บันทึก OT ${empName} PO: ${poNum}`)
+    const month=otMonth||docDate.slice(0,7)
+    await appendRow('OT',[poNum,empName,poOt||'',docDate,otPay,otBill,Number(otBill)-Number(otPay),month,'ยังไม่เรียกเก็บ',req.user.name])
+    await log(req.user,'CREATE_OT',`บันทึก OT ${empName} PO: ${poNum} เดือน: ${month}`)
     res.json({ok:true})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
@@ -252,12 +274,39 @@ app.patch('/api/ot/:rowIdx/collected',auth,async(req,res)=>{
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
+app.put('/api/ot/:rowIdx',auth,async(req,res)=>{
+  try{
+    const idx=parseInt(req.params.rowIdx)
+    const rows=await readSheet('OT!A2:K');const row=rows[idx-1]
+    if(!row) return res.status(404).json({ok:false,error:'ไม่พบรายการ'})
+    const{otPay,otBill,poOt}=req.body
+    const pay=otPay!==undefined?Number(otPay):Number(row[4])
+    const bill=otBill!==undefined?Number(otBill):Number(row[5])
+    const updated=[...row]
+    if(poOt!==undefined) updated[2]=poOt
+    updated[4]=pay;updated[5]=bill;updated[6]=bill-pay
+    await updateRow('OT',idx+1,updated.slice(0,10))
+    await log(req.user,'UPDATE_OT',`แก้ไขยอด OT ${row[1]} PO: ${row[0]}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.delete('/api/ot/:rowIdx',auth,async(req,res)=>{
+  try{
+    const idx=parseInt(req.params.rowIdx)
+    const rows=await readSheet('OT!A2:K');const row=rows[idx-1]
+    if(!row) return res.status(404).json({ok:false,error:'ไม่พบรายการ'})
+    await deleteRow('OT',idx+1)
+    await log(req.user,'DELETE_OT',`ลบ OT ${row[1]} PO: ${row[0]}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+
 // ALERTS
 app.get('/api/alerts',auth,async(req,res)=>{
   try{
     const rows=await readSheet('PO_MASTER!A2:D')
     const today=new Date()
-    res.json({ok:true,data:rows.map(r=>({po:r[0],client:r[1],endDate:r[3],daysLeft:Math.ceil((new Date(r[3])-today)/86400000)})).filter(a=>a.endDate&&a.daysLeft>=0&&a.daysLeft<=14).sort((a,b)=>a.daysLeft-b.daysLeft)})
+    res.json({ok:true,data:rows.map(r=>({po:r[0],client:r[1],endDate:r[3],daysLeft:Math.ceil((new Date(r[3])-today)/86400000)})).filter(a=>a.endDate&&a.daysLeft>=0&&a.daysLeft<=21).sort((a,b)=>a.daysLeft-b.daysLeft)})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
