@@ -472,6 +472,7 @@ app.get('/api/logs',auth,async(req,res)=>{
 })
 
 app.get('/api/health',(req,res)=>res.json({ok:true}))
+app.get('/landing',(req,res)=>res.sendFile(path.join(__dirname,'landing.html')))
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'index.html')))
 
 const PORT=process.env.PORT||8080

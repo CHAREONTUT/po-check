@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chareon Tut - ระบบ IT ครบวงจร</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'DM Sans', sans-serif; background: rgb(250, 250, 249); }
+    h1, h2, h3 { font-family: 'Fraunces', serif; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- ===== HERO ===== -->
+  <header class="relative w-full h-[28rem] overflow-hidden">
+    <!--
+      ใส่รูปทีมกลุ่มใหญ่ที่นี่
+      เปลี่ยน src="images/hero.jpg" เป็น path รูปจริง
+    -->
+    <img
+      src="images/hero.jpg"
+      alt="Team group photo"
+      class="w-full h-full object-cover object-center"
+      onerror="this.style.display='none'"
+    >
+    <div class="absolute inset-0 bg-black/45 flex items-center justify-center">
+      <div class="text-center px-4">
+        <h1 class="text-white tracking-widest" style="font-weight: 600; font-size: 34px; letter-spacing: 0.15em;">
+          CHAREON TUT
+        </h1>
+        <p class="mt-3 text-white/85 text-lg">Building great things together since 2017</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-16">
+
+    <!-- ===== OUR MISSION ===== -->
+    <section class="mb-16 text-center max-w-2xl mx-auto">
+      <h2 class="mb-5" style="color: rgb(28,25,23); font-weight: 400; font-size: 22px; font-style: italic;">
+        Our Mission
+      </h2>
+      <p class="leading-relaxed" style="color: rgb(68,64,60); font-size: 15px;">
+        We believe in the power of collaboration, creativity, and passion.
+        Our diverse team brings unique perspectives to solve meaningful challenges
+        and deliver exceptional results.
+      </p>
+    </section>
+
+    <!-- ===== SERVICES GALLERY ===== -->
+    <section class="mb-16">
+      <h2 class="text-center mb-8" style="color: rgb(28,25,23); font-weight: 400; font-size: 22px; font-style: italic;">
+        พัฒนาเว็บไซต์ &amp; ระบบ IT ครบวงจร สำหรับธุรกิจยุคดิจิทัล
+      </h2>
+      <div class="grid md:grid-cols-2 gap-5">
+        <!--
+          เปลี่ยน src="images/gallery-1.jpg" เป็น path รูปงานอีเวนต์/งานเลี้ยง
+        -->
+        <img
+          src="images/gallery-1.jpg"
+          alt="Team celebration event"
+          class="w-full h-64 object-cover rounded-xl shadow"
+          onerror="this.parentElement.innerHTML='<div class=\'w-full h-64 rounded-xl shadow bg-stone-200 flex items-center justify-center text-stone-400 text-sm\'>gallery-1.jpg</div>'"
+        >
+        <!--
+          เปลี่ยน src="images/gallery-2.jpg" เป็น path รูปทีมทำงาน
+        -->
+        <img
+          src="images/gallery-2.jpg"
+          alt="Team collaborating"
+          class="w-full h-64 object-cover rounded-xl shadow"
+          onerror="this.parentElement.innerHTML='<div class=\'w-full h-64 rounded-xl shadow bg-stone-200 flex items-center justify-center text-stone-400 text-sm\'>gallery-2.jpg</div>'"
+        >
+      </div>
+    </section>
+
+    <!-- ===== MEET THE TEAM ===== -->
+    <section>
+      <h2 class="text-center mb-10" style="color: rgb(28,25,23); font-weight: 700; font-size: 22px; font-style: italic;">
+        Meet the Team
+      </h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        <!-- Member 1 -->
+        <div class="text-center">
+          <!--
+            เปลี่ยน src="images/member-1.jpg" เป็นรูป Nantiya
+          -->
+          <img
+            src="images/member-1.jpg"
+            alt="Nantiya K."
+            class="w-36 h-36 rounded-full object-cover object-top mx-auto shadow-md"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+          >
+          <div class="w-36 h-36 rounded-full mx-auto shadow-md bg-stone-200 items-center justify-center text-stone-400 text-3xl font-bold" style="display:none">N</div>
+          <h3 class="mt-4 font-semibold" style="color: rgb(28,25,23); font-size: 17px;">Nantiya K.</h3>
+          <p class="text-sm" style="color: rgb(120,113,108);">CEO &amp; Head of HR</p>
+        </div>
+
+        <!-- Member 2 -->
+        <div class="text-center">
+          <!--
+            เปลี่ยน src="images/member-2.jpg" เป็นรูป Natta
+          -->
+          <img
+            src="images/member-2.jpg"
+            alt="Natta M."
+            class="w-36 h-36 rounded-full object-cover object-top mx-auto shadow-md"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+          >
+          <div class="w-36 h-36 rounded-full mx-auto shadow-md bg-stone-200 items-center justify-center text-stone-400 text-3xl font-bold" style="display:none">N</div>
+          <h3 class="mt-4 font-semibold" style="color: rgb(28,25,23); font-size: 17px;">Natta M.</h3>
+          <p class="text-sm" style="color: rgb(120,113,108);">System Administrator</p>
+        </div>
+
+        <!-- Member 3 -->
+        <div class="text-center">
+          <!--
+            เปลี่ยน src="images/member-3.jpg" เป็นรูป Chanida
+          -->
+          <img
+            src="images/member-3.jpg"
+            alt="Chanida P."
+            class="w-36 h-36 rounded-full object-cover object-top mx-auto shadow-md"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+          >
+          <div class="w-36 h-36 rounded-full mx-auto shadow-md bg-stone-200 items-center justify-center text-stone-400 text-3xl font-bold" style="display:none">C</div>
+          <h3 class="mt-4 font-semibold" style="color: rgb(28,25,23); font-size: 17px;">Chanida P.</h3>
+          <p class="text-sm" style="color: rgb(120,113,108);">Administrator</p>
+        </div>
+
+        <!-- Member 4 -->
+        <div class="text-center">
+          <!--
+            เปลี่ยน src="images/member-4.jpg" เป็นรูป Kanchaporn
+          -->
+          <img
+            src="images/member-4.jpg"
+            alt="Kanchaporn N."
+            class="w-36 h-36 rounded-full object-cover object-top mx-auto shadow-md"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+          >
+          <div class="w-36 h-36 rounded-full mx-auto shadow-md bg-stone-200 items-center justify-center text-stone-400 text-3xl font-bold" style="display:none">K</div>
+          <h3 class="mt-4 font-semibold" style="color: rgb(28,25,23); font-size: 17px;">Kanchaporn N.</h3>
+          <p class="text-sm" style="color: rgb(120,113,108);">Human Resources Officer</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="py-8 text-center mt-8" style="background: rgb(28,25,23);">
+    <p class="text-sm" style="color: rgb(168,162,158);">© 2026 Our Company. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
