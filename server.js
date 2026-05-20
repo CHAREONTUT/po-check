@@ -246,8 +246,36 @@ app.post('/api/po/bulk',auth,async(req,res)=>{
       const dup=existingEmp.find(r=>r[0]===emp.poNum&&r[1]===emp.name&&r[2]===emp.start&&r[3]===emp.end)
       if(!dup){await appendRow('PO_EMPLOYEES',[emp.poNum,emp.name,emp.start,emp.end,req.user.name,now]);empAdded++}
     }
-    await log(req.user,'BULK_UPLOAD',`Bulk: PO สร้าง ${poCreated} แก้ไข ${poUpdated} พนักงานเพิ่ม ${empAdded}`)
-    res.json({ok:true,poCreated,poUpdated,empAdded})
+    // Process EAS from bulk
+    const easList=[]
+    for(const r of rows){
+      const rawPO2=str(r['PO No.']??r['PO_No']??r['PONo']??r['po no.']??'')
+      const po2=rawPO2||lastPO
+      const empName2=str(r['Name']??r['name']??'')
+      const easNo2=str(r['EAS No']??r['EAS_No']??r['EASNo']??'')
+      const easMonth2=str(r['EAS Month']??r['EAS_Month']??'')
+      const easItem2=str(r['EAS Item']??r['EAS_Item']??r['Item']??'')
+      if(po2&&empName2&&easNo2&&easMonth2) easList.push({poNum:po2,empName:empName2,month:normalizeMonth(easMonth2),easNo:easNo2,item:easItem2})
+    }
+    let easAdded=0,easUpdated=0
+    if(easList.length){
+      const existingEAS=await readSheet('EAS!A2:I')
+      const now2=new Date().toLocaleString('th-TH')
+      for(const eas of easList){
+        const dupIdx=existingEAS.findIndex(r=>r[0]===eas.poNum&&r[1]===eas.empName&&r[2]===eas.month)
+        if(dupIdx===-1){
+          await appendRow('EAS',[eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now2,eas.item])
+          existingEAS.push([eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now2,eas.item])
+          easAdded++
+        }else{
+          const row=existingEAS[dupIdx]
+          await updateRow('EAS',dupIdx+2,[row[0],row[1],row[2],eas.easNo,'Placed',row[5]||'',req.user.name,now2,eas.item||row[8]||''])
+          easUpdated++
+        }
+      }
+    }
+    await log(req.user,'BULK_UPLOAD',`Bulk: PO สร้าง ${poCreated} แก้ไข ${poUpdated} พนักงานเพิ่ม ${empAdded} EAS เพิ่ม ${easAdded} อัพเดต ${easUpdated}`)
+    res.json({ok:true,poCreated,poUpdated,empAdded,easAdded,easUpdated})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
@@ -258,10 +286,10 @@ app.get('/api/ot',auth,async(req,res)=>{
 })
 app.post('/api/ot',auth,async(req,res)=>{
   try{
-    const{poNum,empName,poOt,docDate,otPay,otBill,otMonth}=req.body
+    const{poNum,empName,poOt,docDate,otPay,otBill,otMonth,yearRemark}=req.body
     if(!poNum||!empName||!docDate||!otPay||!otBill) return res.status(400).json({ok:false,error:'กรุณากรอกข้อมูลที่บังคับ (*)'})
     const month=otMonth||docDate.slice(0,7)
-    await appendRow('OT',[poNum,empName,poOt||'',docDate,otPay,otBill,Number(otBill)-Number(otPay),month,'ยังไม่เรียกเก็บ',req.user.name])
+    await appendRow('OT',[poNum,empName,poOt||'',docDate,otPay,otBill,Number(otBill)-Number(otPay),month,'ยังไม่เรียกเก็บ',req.user.name,yearRemark||''])
     await log(req.user,'CREATE_OT',`บันทึก OT ${empName} PO: ${poNum} เดือน: ${month}`)
     res.json({ok:true})
   }catch(e){res.status(500).json({ok:false,error:e.message})}

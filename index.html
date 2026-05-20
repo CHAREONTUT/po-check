@@ -237,7 +237,6 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <button class="nav-item" onclick="nav('bulk',this)">📤 Bulk Upload</button>
     <button class="nav-item" onclick="nav('eas-pending',this);loadPending()">🔴 EAS ยังไม่วาง</button>
     <button class="nav-item" onclick="nav('eas-placed',this);loadPlaced()">✅ EAS วางแล้ว</button>
-    <button class="nav-item" onclick="nav('logs',this);loadLogs()">📋 Logs</button>
     <button class="logout-btn" onclick="doLogout()">🚪 ออกจากระบบ</button>
   </aside>
 
@@ -328,39 +327,100 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <div class="page" id="page-ot-form">
       <div class="topbar"><div><div class="page-title">⏱ บันทึก OT</div><div class="page-sub">เลือก PO แล้วกรอก OT แต่ละพนักงานพร้อมกัน</div></div></div>
       <div class="card" style="max-width:820px"><div class="card-body">
-        <div class="frow">
-          <div class="fg">
-            <label>เลข PO * <span class="opt">(พิมพ์เพื่อค้นหา)</span></label>
-            <input class="fi2" id="ot-po" list="ot-po-datalist" placeholder="พิมพ์ค้นหา PO..." oninput="onOTPOChange(this.value)" autocomplete="off">
-            <datalist id="ot-po-datalist"></datalist>
+
+        <!-- Toggle Old Year -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:10px 14px;background:#FFF7ED;border-radius:10px;border:1px solid #FED7AA;flex-wrap:wrap">
+          <label class="ck-wrap" style="cursor:pointer;gap:8px" onclick="toggleOldPO()">
+            <div class="ck-box" id="ot-old-ckbox"></div>
+            <span style="font-size:13px;font-weight:600;color:#92400E">⏳ บันทึก OT ปีที่แล้ว (ใส่เลข PO เอง)</span>
+          </label>
+          <select class="fi2" id="ot-old-year" style="display:none;width:120px;padding:7px 10px;font-size:13px" onchange="updateOldMonths()">
+            <option value="2023">ปี 2023</option>
+            <option value="2024">ปี 2024</option>
+            <option value="2025">ปี 2025</option>
+          </select>
+        </div>
+
+        <!-- Normal PO section -->
+        <div id="ot-normal-section">
+          <div class="frow">
+            <div class="fg">
+              <label>เลข PO * <span class="opt">(พิมพ์เพื่อค้นหา)</span></label>
+              <input class="fi2" id="ot-po" list="ot-po-datalist" placeholder="พิมพ์ค้นหา PO..." oninput="onOTPOChange(this.value)" autocomplete="off">
+              <datalist id="ot-po-datalist"></datalist>
+            </div>
+            <div class="fg">
+              <label>วันที่ออกเอกสารเรียกเก็บ *</label>
+              <input class="fi2" id="ot-dt" type="date">
+            </div>
           </div>
-          <div class="fg">
-            <label>วันที่ออกเอกสารเรียกเก็บ *</label>
-            <input class="fi2" id="ot-dt" type="date">
+          <div class="fg" style="max-width:320px">
+            <label>เลข PO_OT <span class="opt">(แก้ไขทีหลังได้)</span></label>
+            <input class="fi2" id="ot-poot" placeholder="OT-1234 (ไม่บังคับ)">
+          </div>
+          <div id="ot-no-emp" style="display:none;margin-top:12px;padding:14px 16px;background:#FFF7ED;border-radius:10px;font-size:13px;color:#92400E">
+            ⚠️ ไม่พบพนักงานใน PO นี้ กรุณาเพิ่มพนักงานก่อนที่เมนู <strong>รายการ PO</strong>
+          </div>
+          <div id="ot-emp-section" style="display:none;margin-top:14px">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border)">📋 กรอก OT ต่อพนักงาน <span class="opt">(กรอกเฉพาะพนักงานที่มี OT)</span></div>
+            <div class="tbl-wrap">
+              <table style="min-width:600px">
+                <thead><tr>
+                  <th style="padding-left:12px">ชื่อพนักงาน</th>
+                  <th>ช่วงเวลาสัญญา</th>
+                  <th>เดือนที่เบิก *</th>
+                  <th>OT จ่ายพนักงาน (฿) *</th>
+                  <th>OT เรียกเก็บลูกค้า (฿) *</th>
+                </tr></thead>
+                <tbody id="ot-emp-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <div class="fg" style="max-width:320px">
-          <label>เลข PO_OT <span class="opt">(แก้ไขทีหลังได้)</span></label>
-          <input class="fi2" id="ot-poot" placeholder="OT-1234 (ไม่บังคับ)">
-        </div>
-        <div id="ot-no-emp" style="display:none;margin-top:12px;padding:14px 16px;background:#FFF7ED;border-radius:10px;font-size:13px;color:#92400E">
-          ⚠️ ไม่พบพนักงานใน PO นี้ กรุณาเพิ่มพนักงานก่อนที่เมนู <strong>รายการ PO</strong>
-        </div>
-        <div id="ot-emp-section" style="display:none;margin-top:14px">
-          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border)">📋 กรอก OT ต่อพนักงาน <span class="opt">(กรอกเฉพาะพนักงานที่มี OT)</span></div>
-          <div class="tbl-wrap">
-            <table style="min-width:600px">
-              <thead><tr>
-                <th style="padding-left:12px">ชื่อพนักงาน</th>
-                <th>ช่วงเวลาสัญญา</th>
-                <th>เดือนที่เบิก *</th>
-                <th>OT จ่ายพนักงาน (฿) *</th>
-                <th>OT เรียกเก็บลูกค้า (฿) *</th>
-              </tr></thead>
-              <tbody id="ot-emp-tbody"></tbody>
-            </table>
+
+        <!-- Old Year PO section -->
+        <div id="ot-old-section" style="display:none">
+          <div style="background:#FFFBEB;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#92400E">
+            📌 กรอกข้อมูล OT ของปีที่ระบุ ระบบจะบันทึกพร้อมหมายเหตุปีที่เลือก
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>เลข PO * <span class="opt">(กรอกเองได้เลย)</span></label>
+              <input class="fi2" id="ot-po-old" placeholder="เช่น PO-2024-021">
+            </div>
+            <div class="fg">
+              <label>วันที่ออกเอกสาร *</label>
+              <input class="fi2" id="ot-dt-old" type="date">
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>ชื่อพนักงาน *</label>
+              <input class="fi2" id="ot-emp-old" placeholder="ชื่อ นามสกุล">
+            </div>
+            <div class="fg">
+              <label>เดือนที่เบิก *</label>
+              <select class="fi2" id="ot-month-old">
+                <option value="">-- เลือกเดือน --</option>
+              </select>
+            </div>
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>OT จ่ายพนักงาน (฿) *</label>
+              <input class="fi2" id="ot-pay-old" type="number" placeholder="0.00" min="0">
+            </div>
+            <div class="fg">
+              <label>OT เรียกเก็บลูกค้า (฿) *</label>
+              <input class="fi2" id="ot-bill-old" type="number" placeholder="0.00" min="0">
+            </div>
+          </div>
+          <div class="fg" style="max-width:320px">
+            <label>เลข PO_OT <span class="opt">(ไม่บังคับ)</span></label>
+            <input class="fi2" id="ot-poot-old" placeholder="OT-1234">
           </div>
         </div>
+
         <button class="btn btn-primary" id="btn-ot" onclick="submitOT()" style="margin-top:16px">💾 บันทึก OT</button>
       </div></div>
     </div>
@@ -386,10 +446,11 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
       <div class="card" style="max-width:640px"><div class="card-body">
         <div style="background:#EFF6FF;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13px;color:#1D4ED8;line-height:1.8">
           📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
-          <strong>PO No. | DM | Start | End | Item | Name</strong><br>
+          <strong>PO No. | DM | Start | End | Item | Name | EAS No | EAS Month</strong><br>
           <span style="color:var(--muted);font-size:12px">• 1 แถว = พนักงาน 1 คน ใน 1 ช่วงเวลา<br>
           • Start/End = วันเริ่ม-สิ้นสุดของพนักงานคนนั้นในช่วงนั้น<br>
-          • พนักงาน 1 คนใน PO เดียวกันสามารถมีหลายแถว (หลายช่วงเวลา)<br>
+          • EAS No + EAS Month = ถ้ากรอกจะบันทึก EAS Placed ให้อัตโนมัติ<br>
+          • EAS Month รูปแบบ: 01-31/03/2026 หรือ 2026-03<br>
           • PO No. กรอกแค่บรรทัดแรกของแต่ละ PO</span>
         </div>
         <div class="upload-zone" onclick="document.getElementById('bulk-file').click()">
@@ -400,10 +461,11 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
         <div id="bulk-preview" style="margin-top:16px;display:none">
           <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="bulk-preview-title"></div>
           <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
-            <table><thead><tr><th>PO No.</th><th>DM</th><th>Start</th><th>End</th><th>Item</th><th>Name</th></tr></thead>
+            <table><thead><tr><th>PO No.</th><th>DM</th><th>Start</th><th>End</th><th>Item</th><th>Name</th><th>EAS No</th><th>EAS Month</th></tr></thead>
             <tbody id="bulk-preview-body"></tbody></table>
           </div>
           <button class="btn btn-primary" id="btn-bulk" onclick="submitBulk()" style="margin-top:14px">📤 อัปโหลดข้อมูล</button>
+          <div id="bulk-eas-result" style="display:none;margin-top:14px"></div>
         </div>
       </div></div>
     </div>
@@ -446,11 +508,6 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
       </div></div>
     </div>
 
-    <!-- LOGS -->
-    <div class="page" id="page-logs">
-      <div class="topbar"><div><div class="page-title">📋 Log การใช้งาน</div><div class="page-sub">200 รายการล่าสุด</div></div><button class="btn btn-ghost" onclick="loadLogs()">🔄 รีเฟรช</button></div>
-      <div class="card"><div class="card-body" id="log-list"></div></div>
-    </div>
   </main>
 </div>
 
@@ -588,10 +645,7 @@ function showErr(m){const e=document.getElementById('login-err');e.textContent=m
 function doLogout(){
   localStorage.removeItem('po_token');localStorage.removeItem('po_user')
   TOKEN='';USER=null
-  document.getElementById('app').classList.remove('show')
-  document.getElementById('login-wrap').style.display='flex'
-  ;['l-em','l-pw'].forEach(i=>document.getElementById(i).value='')
-  document.getElementById('login-err').classList.remove('show')
+  window.location.href='/landing.html'
 }
 function saveAuth(t,u){TOKEN=t;USER=u;localStorage.setItem('po_token',t);localStorage.setItem('po_user',JSON.stringify(u))}
 function enterApp(){
@@ -600,6 +654,11 @@ function enterApp(){
   document.getElementById('sb-name').textContent=USER?.name||'—'
   document.getElementById('sb-email').textContent=USER?.email||'—'
   document.getElementById('top-av').textContent=(USER?.name||'U')[0].toUpperCase()
+  // Always reset to Dashboard every time app enters (login / refresh)
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
+  document.getElementById('page-dash').classList.add('active')
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'))
+  document.querySelector('.nav-item').classList.add('active')
   initEmp();loadAll()
 }
 
@@ -613,13 +672,25 @@ function nav(id,el){
 async function loadAll(){
   spin(true)
   try{
-    const [po,emp,ot,al,easSum,exp]=await Promise.all([
+    const [po,emp,ot,al,easSum,exp,easAll]=await Promise.all([
       api('GET','/api/po'),api('GET','/api/employees'),api('GET','/api/ot'),
-      api('GET','/api/alerts'),api('GET','/api/eas/summary/today'),api('GET','/api/po/expired/list')
+      api('GET','/api/alerts'),api('GET','/api/eas/summary/today'),api('GET','/api/po/expired/list'),
+      api('GET','/api/eas')
     ])
     C.po=po.data||[];C.emp=emp.data||[];C.ot=ot.data||[];C.alerts=al.data||[]
     C.easSummary=easSum.ok?easSum:{}
     C.expired=exp.data||[]
+    // Build easMap: key = "poNum|empName|month" → {easNo, item}
+    C.easMap={}
+    ;(easAll.data||[]).forEach(r=>{
+      const key=(r[0]||'')+'|'+(r[1]||'')+'|'+(r[2]||'')
+      C.easMap[key]={easNo:r[3]||'',item:r[8]||''}
+    })
+    // Build easItemMap: key = "poNum|empName" → last item used
+    C.easItemMap={}
+    ;(easAll.data||[]).forEach(r=>{
+      if(r[8]) C.easItemMap[(r[0]||'')+'|'+(r[1]||'')]=r[8]
+    })
     renderAll()
     document.getElementById('last-upd').textContent='อัปเดต: '+new Date().toLocaleString('th-TH')
   }catch(e){toast('โหลดข้อมูลไม่ได้','error')}
@@ -728,7 +799,7 @@ function renderOTT(){
   document.getElementById('ot-tbody').innerHTML=rows.length?rows.map((r,i)=>{
     const col=r[8]==='เรียกเก็บแล้ว'
     return`<tr>
-      <td style="padding-left:12px;color:var(--muted)">${r[0]||'—'}</td>
+      <td style="padding-left:12px;color:var(--muted)">${r[0]||'—'}${r[10]?`<span class="tag t-amber" style="margin-left:4px">ปี ${r[10]}</span>`:''}</td>
       <td style="font-weight:600">${r[1]||''}</td>
       <td style="font-size:12px;color:var(--indigo);font-weight:600">${r[7]||'—'}</td>
       <td>${r[2]||'<span style="color:var(--muted);font-style:italic">ยังไม่มี</span>'}</td>
@@ -763,7 +834,7 @@ async function toggleCol(idx,el){
   if(r.ok){
     const on=r.status==='เรียกเก็บแล้ว'
     const box=el.querySelector('.ck-box'),lbl=el.querySelector('.ck-label')
-    box.classList.toggle('on',on);lbl.textContent=on?'เรียกเก็บแล้ว':'Not Placed'
+    box.classList.toggle('on',on);lbl.textContent=on?'เรียกเก็บแล้ว':'ยังไม่เรียกเก็บ'
     lbl.style.color=on?'var(--green)':'var(--muted)';lbl.style.fontWeight=on?'600':'400'
     C.ot[idx-1][8]=r.status;toast(on?'เรียกเก็บแล้ว ✅':'ยังไม่เรียกเก็บ','success')
   }else toast(r.error||'เกิดข้อผิดพลาด','error')
@@ -859,22 +930,24 @@ async function showPODetail(poNum){
       <div id="eas-list-${r.poNum}" style="margin-bottom:14px"><div style="color:var(--muted);font-size:13px">กำลังโหลด EAS...</div></div>
       <div style="background:#F0F4FF;border-radius:12px;padding:16px">
         <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px">➕ บันทึก EAS ใหม่</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">ชื่อพนักงาน *</label>
-            <select class="month-select" id="eas-emp-${r.poNum}">
-              <option value="">-- เลือกพนักงาน --</option>
-              ${emps.map(e=>'<option value="'+e.name+'">'+e.name+'</option>').join('')}
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Item</label>
-            <input class="fi2" id="eas-item-${r.poNum}" placeholder="เช่น Item A" style="font-size:13px;padding:8px 10px">
+        <div style="margin-bottom:8px">
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">เลือกพนักงาน * <span style="font-weight:400;color:var(--blue)">(ติ๊กได้หลายคน — เลข EAS เดียวกัน)</span></label>
+          <div id="eas-emp-list-${r.poNum}" style="display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:8px">
+            ${emps.map(e=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:3px 4px;border-radius:4px" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background=''">
+              <input type="checkbox" class="eas-emp-ck" value="${e.name}" onchange="autoFillItemFromEmp('${r.poNum}',this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">
+              ${e.name}
+            </label>`).join('')}
           </div>
         </div>
-        <div style="margin-bottom:8px">
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">ช่วงเวลา * (dd-dd/mm/yyyy เช่น 01-31/03/2026)</label>
-          <input class="fi2" id="eas-month-${r.poNum}" placeholder="01-31/03/2026" style="font-size:13px;padding:8px 10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">ช่วงเวลา * (เช่น 01-31/03/2026)</label>
+            <input class="fi2" id="eas-month-${r.poNum}" placeholder="01-31/03/2026" style="font-size:13px;padding:8px 10px">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Item <span style="color:var(--blue);font-weight:400">(auto จากประวัติ)</span></label>
+            <input class="fi2" id="eas-item-${r.poNum}" placeholder="เช่น Item A" style="font-size:13px;padding:8px 10px">
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
@@ -1047,7 +1120,51 @@ function onOTPOChange(val){
     </tr>`
   }).join('')
 }
+function updateOldMonths(){
+  const year=document.getElementById('ot-old-year').value
+  const thMonths=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
+  const sel=document.getElementById('ot-month-old')
+  sel.innerHTML='<option value="">-- เลือกเดือน --</option>'
+  thMonths.forEach((m,i)=>{
+    const val=year+'-'+(i+1<10?'0'+(i+1):(i+1))
+    const opt=document.createElement('option')
+    opt.value=val
+    opt.textContent=m+' '+year
+    sel.appendChild(opt)
+  })
+}
+function toggleOldPO(){
+  const ckbox=document.getElementById('ot-old-ckbox')
+  const isOld=!ckbox.classList.contains('on')
+  ckbox.classList.toggle('on',isOld)
+  document.getElementById('ot-old-year').style.display=isOld?'':'none'
+  document.getElementById('ot-normal-section').style.display=isOld?'none':''
+  document.getElementById('ot-old-section').style.display=isOld?'':'none'
+  if(isOld) updateOldMonths()
+  else{
+    document.getElementById('ot-emp-section').style.display='none'
+    document.getElementById('ot-no-emp').style.display='none'
+  }
+}
 async function submitOT(){
+  const isOld=document.getElementById('ot-old-ckbox').classList.contains('on')
+  if(isOld){
+    const poNum=g('ot-po-old'),docDate=g('ot-dt-old'),empName=g('ot-emp-old')
+    const otMonth=g('ot-month-old'),otPay=g('ot-pay-old'),otBill=g('ot-bill-old')
+    const poOt=g('ot-poot-old')
+    const yearRemark=document.getElementById('ot-old-year').value
+    if(!poNum||!docDate||!empName||!otMonth||!otPay||!otBill){toast('กรุณากรอกข้อมูลให้ครบ','error');return}
+    setLoad('btn-ot',true)
+    const r=await api('POST','/api/ot',{poNum,empName,poOt,docDate,otPay,otBill,otMonth,yearRemark})
+    setLoad('btn-ot',false)
+    if(r.ok){
+      toast(`บันทึก OT ปี ${yearRemark} สำเร็จ ✅`,'success')
+      ;['ot-po-old','ot-dt-old','ot-emp-old','ot-pay-old','ot-bill-old','ot-poot-old'].forEach(i=>document.getElementById(i).value='')
+      document.getElementById('ot-month-old').selectedIndex=0
+      loadAll()
+    }else toast(r.error||'เกิดข้อผิดพลาด','error')
+    return
+  }
   const poNum=g('ot-po'),docDate=g('ot-dt'),poOt=g('ot-poot')
   if(!poNum||!docDate){toast('กรุณากรอก PO และวันที่','error');return}
   const rows=document.querySelectorAll('#ot-emp-tbody tr')
@@ -1085,12 +1202,18 @@ function selectAllPO(v){document.querySelectorAll('#export-po-list input[type=ch
 function doExportPO(){
   const selected=Array.from(document.querySelectorAll('#export-po-list input[type=checkbox]:checked')).map(c=>c.value)
   if(!selected.length){toast('กรุณาเลือก PO อย่างน้อย 1 ใบ','error');return}
-  const hdr=['เลข PO','ชื่อลูกค้า (DM)','วันเริ่ม PO','วันสิ้นสุด PO','ชื่อพนักงาน','วันเริ่ม(พนักงาน)','วันสิ้นสุด(พนักงาน)']
+  const hdr=['เลข PO','ชื่อลูกค้า (DM)','วันเริ่ม PO','วันสิ้นสุด PO','ชื่อพนักงาน','วันเริ่ม(พนักงาน)','วันสิ้นสุด(พนักงาน)','เลข EAS ล่าสุด','Item']
   const rows=[]
   C.po.filter(r=>selected.includes(r[0])).forEach(r=>{
     const emps=C.emp.filter(e=>e[0]===r[0])
-    if(emps.length) emps.forEach(e=>rows.push([r[0],r[1],r[2],r[3],e[1],e[2],e[3]]))
-    else rows.push([r[0],r[1],r[2],r[3],'(ไม่มีพนักงาน)','',''])
+    if(emps.length){
+      emps.forEach(e=>{
+        // Find latest EAS for this PO+emp (any month)
+        const easEntries=Object.entries(C.easMap||{}).filter(([k])=>k.startsWith(r[0]+'|'+e[1]+'|')).map(([,v])=>v)
+        const latestEAS=easEntries.filter(v=>v.easNo).pop()
+        rows.push([r[0],r[1],r[2],r[3],e[1],e[2],e[3],latestEAS?.easNo||'',latestEAS?.item||''])
+      })
+    }else rows.push([r[0],r[1],r[2],r[3],'(ไม่มีพนักงาน)','','','',''])
   })
   dlXLSX([hdr,...rows],`PO_Export_${today()}.xlsx`)
   closeM('m-export');toast('Export สำเร็จ ✅','success')
@@ -1098,8 +1221,12 @@ function doExportPO(){
 async function exportOnePO(poNum){
   const r=await api('GET',`/api/po/${enc(poNum)}`)
   if(!r.ok){toast('ไม่พบ PO','error');return}
-  const hdr=['เลข PO','ชื่อลูกค้า (DM)','วันเริ่ม PO','วันสิ้นสุด PO','ชื่อพนักงาน','วันเริ่ม(พนักงาน)','วันสิ้นสุด(พนักงาน)']
-  const rows=r.employees.length?r.employees.map(e=>[r.poNum,r.client,r.startDate,r.endDate,e.name,e.start,e.end]):[[r.poNum,r.client,r.startDate,r.endDate,'(ไม่มีพนักงาน)','','']]
+  const hdr=['เลข PO','ชื่อลูกค้า (DM)','วันเริ่ม PO','วันสิ้นสุด PO','ชื่อพนักงาน','วันเริ่ม(พนักงาน)','วันสิ้นสุด(พนักงาน)','เลข EAS ล่าสุด','Item']
+  const rows=r.employees.length?r.employees.map(e=>{
+    const easEntries=Object.entries(C.easMap||{}).filter(([k])=>k.startsWith(poNum+'|'+e.name+'|')).map(([,v])=>v)
+    const latestEAS=easEntries.filter(v=>v.easNo).pop()
+    return[r.poNum,r.client,r.startDate,r.endDate,e.name,e.start,e.end,latestEAS?.easNo||'',latestEAS?.item||'']
+  }):[[r.poNum,r.client,r.startDate,r.endDate,'(ไม่มีพนักงาน)','','','','']]
   dlXLSX([hdr,...rows],`PO_${poNum}_${today()}.xlsx`)
   toast('Export สำเร็จ ✅','success')
 }
@@ -1107,8 +1234,13 @@ function exportOT(){
   const f=(document.getElementById('ot-f').value||'').toLowerCase()
   const rows=C.ot.filter(r=>!f||(r[1]||'').toLowerCase().includes(f))
   if(!rows.length){toast('ไม่มีข้อมูลที่จะ Export','error');return}
-  const hdr=['เลข PO','ชื่อพนักงาน','เลข PO_OT','วันที่ออกเอกสาร','จ่ายพนักงาน','เรียกเก็บลูกค้า','กำไร','เดือน','สถานะ','บันทึกโดย']
-  dlXLSX([hdr,...rows],`OT_Export_${today()}.xlsx`)
+  const hdr=['เลข PO','ชื่อพนักงาน','เลข PO_OT','วันที่ออกเอกสาร','จ่ายพนักงาน','เรียกเก็บลูกค้า','กำไร','เดือน','สถานะ','บันทึกโดย','หมายเหตุปี','เลข EAS']
+  const withEAS=rows.map(r=>{
+    const key=(r[0]||'')+'|'+(r[1]||'')+'|'+(r[7]||'')
+    const easNo=(C.easMap||{})[key]?.easNo||''
+    return [...r, easNo]
+  })
+  dlXLSX([hdr,...withEAS],`OT_Export_${today()}.xlsx`)
   toast('Export OT สำเร็จ ✅','success')
 }
 function dlXLSX(rows,fn){
@@ -1141,6 +1273,8 @@ function processBulk(file){
         <td style="font-weight:600;color:var(--blue)">${r['PO No.']||r['PO_No']||''}</td>
         <td>${r['DM']||''}</td><td>${r['Start']||''}</td><td>${r['End']||''}</td>
         <td style="text-align:center">${r['Item']||''}</td><td>${r['Name']||r['name']||''}</td>
+        <td style="color:var(--green);font-weight:600">${r['EAS No']||r['EAS_No']||''}</td>
+        <td style="color:var(--indigo)">${r['EAS Month']||r['EAS_Month']||''}</td>
       </tr>`).join('')
       document.getElementById('bulk-preview-title').textContent=`พบ ${norm.length} แถว (แสดง 10 แรก)`
       document.getElementById('bulk-preview').style.display=''
@@ -1154,8 +1288,18 @@ async function submitBulk(){
   const r=await api('POST','/api/po/bulk',{rows:BULK_DATA})
   setLoad('btn-bulk',false)
   if(r.ok){
-    toast(`สำเร็จ! PO สร้าง ${r.poCreated} แก้ไข ${r.poUpdated} พนักงานเพิ่ม ${r.empAdded} รายการ ✅`,'success')
-    BULK_DATA=[];document.getElementById('bulk-preview').style.display='none';document.getElementById('bulk-file').value='';loadAll()
+    const easMsg=(r.easAdded||r.easUpdated)?` · EAS เพิ่ม ${r.easAdded||0} อัพเดต ${r.easUpdated||0}`:''
+    toast(`สำเร็จ! PO สร้าง ${r.poCreated} แก้ไข ${r.poUpdated} พนักงาน ${r.empAdded}${easMsg} ✅`,'success')
+    // Show EAS result summary if any
+    const easResultEl=document.getElementById('bulk-eas-result')
+    if(easResultEl&&(r.easAdded||r.easUpdated)){
+      easResultEl.style.display=''
+      easResultEl.innerHTML=`<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:12px 14px;font-size:13px">
+        <div style="font-weight:700;color:#065F46;margin-bottom:6px">✅ EAS ที่บันทึกจาก Bulk Upload</div>
+        <div style="color:#047857">เพิ่มใหม่ ${r.easAdded||0} รายการ · อัพเดต ${r.easUpdated||0} รายการ</div>
+      </div>`
+    }
+    BULK_DATA=[];document.getElementById('bulk-file').value='';loadAll()
   }else toast(`เกิดข้อผิดพลาด: ${r.error||'ไม่ทราบสาเหตุ'}`,'error')
 }
 
@@ -1210,31 +1354,46 @@ function checkEASRemark(poNum){
   if(wrap) wrap.style.display=(status&&status.value==='Not Placed')?'block':'none'
 }
 
+function autoFillItemFromEmp(poNum,cb){
+  if(!cb.checked) return
+  var empName=cb.value
+  var lastItem=(C.easItemMap||{})[poNum+'|'+empName]||''
+  var itemEl=document.getElementById('eas-item-'+poNum)
+  if(itemEl&&lastItem&&!itemEl.value) itemEl.value=lastItem
+}
 async function saveEAS(poNum){
-  var empEl=document.getElementById('eas-emp-'+poNum)
+  var checkedEmps=Array.from(document.querySelectorAll('#eas-emp-list-'+poNum+' .eas-emp-ck:checked')).map(function(cb){return cb.value})
+  if(!checkedEmps.length){toast('กรุณาติ๊กเลือกพนักงานอย่างน้อย 1 คน','error');return}
   var monthEl=document.getElementById('eas-month-'+poNum)
   var easNoEl=document.getElementById('eas-no-'+poNum)
   var statusEl=document.getElementById('eas-status-'+poNum)
   var remarkEl=document.getElementById('eas-remark-'+poNum)
-  var empName=empEl?empEl.value:''
+  var itemEl=document.getElementById('eas-item-'+poNum)
   var month=monthEl?monthEl.value.trim():''
   var easNo=easNoEl?easNoEl.value.trim():''
   var status=statusEl?statusEl.value:'Placed'
   var remark=remarkEl?remarkEl.value.trim():''
-  if(!empName||!month){toast('กรุณาเลือกพนักงานและกรอกเดือน','error');return}
-  if(status==='Not Placed'&&!remark){toast('กรุณากรอกหมายเหตุเมื่อNot Placed','error');return}
-  var itemEl=document.getElementById('eas-item-'+poNum)
   var item=itemEl?itemEl.value.trim():''
-  const r=await api('POST','/api/eas',{poNum,empName,month,easNo,status,remark,item})
-  if(r.ok){
-    toast('บันทึก EAS สำเร็จ ✅','success')
+  if(!month){toast('กรุณากรอกช่วงเวลา','error');return}
+  if(status==='Not Placed'&&!remark){toast('กรุณากรอกหมายเหตุเมื่อ Not Placed','error');return}
+  var success=0,failed=0,dupList=[]
+  for(var i=0;i<checkedEmps.length;i++){
+    var empName=checkedEmps[i]
+    var r=await api('POST','/api/eas',{poNum,empName,month,easNo,status,remark,item})
+    if(r.ok){success++;if(item) C.easItemMap[poNum+'|'+empName]=item}
+    else if(r.error&&r.error.includes('มีข้อมูล')) dupList.push(empName)
+    else failed++
+  }
+  if(success){
+    toast('บันทึก EAS สำเร็จ '+success+' คน'+(dupList.length?' (ซ้ำ: '+dupList.join(', ')+')':'')+' ✅','success')
     if(easNoEl) easNoEl.value=''
     if(remarkEl) remarkEl.value=''
     if(monthEl) monthEl.value=''
-    var itemEl2=document.getElementById('eas-item-'+poNum)
-    if(itemEl2) itemEl2.value=''
+    // uncheck all
+    document.querySelectorAll('#eas-emp-list-'+poNum+' .eas-emp-ck').forEach(function(cb){cb.checked=false})
     loadEASForPO(poNum)
-  }else toast(r.error||'เกิดข้อผิดพลาด','error')
+  }else if(dupList.length){toast('มีข้อมูล EAS ซ้ำทั้งหมด: '+dupList.join(', '),'error')}
+  else toast('เกิดข้อผิดพลาด','error')
 }
 
 var EDIT_EAS_IDX=0,EDIT_EAS_PO=''
