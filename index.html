@@ -442,32 +442,71 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 
     <!-- BULK UPLOAD -->
     <div class="page" id="page-bulk">
-      <div class="topbar"><div><div class="page-title">📤 Bulk Upload PO</div><div class="page-sub">อัปโหลด Excel เพื่อเพิ่ม/อัปเดต PO พร้อมพนักงานและช่วงเวลาของแต่ละคน</div></div></div>
-      <div class="card" style="max-width:640px"><div class="card-body">
-        <div style="background:#EFF6FF;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13px;color:#1D4ED8;line-height:1.8">
-          📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
-          <strong>PO No. | DM | Start | End | Item | Name | EAS No | EAS Month</strong><br>
-          <span style="color:var(--muted);font-size:12px">• 1 แถว = พนักงาน 1 คน ใน 1 ช่วงเวลา<br>
-          • Start/End = วันเริ่ม-สิ้นสุดของพนักงานคนนั้นในช่วงนั้น<br>
-          • EAS No + EAS Month = ถ้ากรอกจะบันทึก EAS Placed ให้อัตโนมัติ<br>
-          • EAS Month รูปแบบ: 01-31/03/2026 หรือ 2026-03<br>
-          • PO No. กรอกแค่บรรทัดแรกของแต่ละ PO</span>
-        </div>
-        <div class="upload-zone" onclick="document.getElementById('bulk-file').click()">
-          <input type="file" id="bulk-file" accept=".xlsx,.xls,.csv" onchange="handleBulkFile(event)">
-          <div class="upload-icon">📂</div>
-          <div class="upload-hint">คลิกหรือลากไฟล์ Excel มาวางที่นี่<br><strong>.xlsx / .xls / .csv</strong></div>
-        </div>
-        <div id="bulk-preview" style="margin-top:16px;display:none">
-          <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="bulk-preview-title"></div>
-          <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
-            <table><thead><tr><th>PO No.</th><th>DM</th><th>Start</th><th>End</th><th>Item</th><th>Name</th><th>EAS No</th><th>EAS Month</th></tr></thead>
-            <tbody id="bulk-preview-body"></tbody></table>
+      <div class="topbar"><div><div class="page-title">📤 Bulk Upload</div><div class="page-sub">อัปโหลด Excel เพื่อเพิ่ม/อัปเดต PO หรืออัปเดต EAS เดือนใหม่</div></div></div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button class="btn btn-primary" id="bulk-tab-po" onclick="switchBulkTab('po')" style="border-radius:20px">📋 Bulk PO + พนักงาน</button>
+        <button class="btn btn-ghost" id="bulk-tab-eas" onclick="switchBulkTab('eas')" style="border-radius:20px">📑 EAS เดือนใหม่ (EAS Only)</button>
+      </div>
+
+      <!-- Tab: PO Bulk -->
+      <div id="bulk-section-po">
+        <div class="card" style="max-width:640px"><div class="card-body">
+          <div style="background:#EFF6FF;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13px;color:#1D4ED8;line-height:1.8">
+            📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
+            <strong>PO No. | DM | Start | End | Item | Name | EAS No | EAS Month</strong><br>
+            <span style="color:var(--muted);font-size:12px">• 1 แถว = พนักงาน 1 คน ใน 1 ช่วงเวลา<br>
+            • Start/End = วันเริ่ม-สิ้นสุดของพนักงานคนนั้นในช่วงนั้น<br>
+            • EAS No + EAS Month = ถ้ากรอกจะบันทึก EAS Placed ให้อัตโนมัติ<br>
+            • EAS Month รูปแบบ: 01-31/03/2026 หรือ 2026-03<br>
+            • PO No. กรอกแค่บรรทัดแรกของแต่ละ PO</span>
           </div>
-          <button class="btn btn-primary" id="btn-bulk" onclick="submitBulk()" style="margin-top:14px">📤 อัปโหลดข้อมูล</button>
-          <div id="bulk-eas-result" style="display:none;margin-top:14px"></div>
-        </div>
-      </div></div>
+          <div class="upload-zone" onclick="document.getElementById('bulk-file').click()">
+            <input type="file" id="bulk-file" accept=".xlsx,.xls,.csv" onchange="handleBulkFile(event)">
+            <div class="upload-icon">📂</div>
+            <div class="upload-hint">คลิกหรือลากไฟล์ Excel มาวางที่นี่<br><strong>.xlsx / .xls / .csv</strong></div>
+          </div>
+          <div id="bulk-preview" style="margin-top:16px;display:none">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="bulk-preview-title"></div>
+            <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+              <table><thead><tr><th>PO No.</th><th>DM</th><th>Start</th><th>End</th><th>Item</th><th>Name</th><th>EAS No</th><th>EAS Month</th></tr></thead>
+              <tbody id="bulk-preview-body"></tbody></table>
+            </div>
+            <button class="btn btn-primary" id="btn-bulk" onclick="submitBulk()" style="margin-top:14px">📤 อัปโหลดข้อมูล</button>
+            <div id="bulk-eas-result" style="display:none;margin-top:14px"></div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- Tab: EAS Only -->
+      <div id="bulk-section-eas" style="display:none">
+        <div class="card" style="max-width:640px"><div class="card-body">
+          <div style="background:#F0FDF4;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13px;color:#166534;line-height:1.8">
+            📌 ใช้สำหรับ <strong>อัปเดตเลข EAS เดือนใหม่เท่านั้น</strong> ไม่ต้องใส่ข้อมูล PO ซ้ำ<br>
+            รูปแบบ Header ที่ต้องใช้:<br>
+            <strong>PO No. | Name | EAS No | EAS Month</strong><br>
+            <span style="color:var(--muted);font-size:12px">• PO No. และ Name ต้องตรงกับที่มีในระบบแล้ว<br>
+            • EAS Month รูปแบบ: 2026-03 หรือ 03/2026<br>
+            • ถ้าเดือนนั้นมี EAS อยู่แล้ว ระบบจะอัปเดตให้อัตโนมัติ<br>
+            • PO No. กรอกแค่บรรทัดแรกของแต่ละ PO</span>
+          </div>
+          <div class="upload-zone" onclick="document.getElementById('eas-bulk-file').click()">
+            <input type="file" id="eas-bulk-file" accept=".xlsx,.xls,.csv" onchange="handleEASBulkFile(event)">
+            <div class="upload-icon">📑</div>
+            <div class="upload-hint">คลิกหรือลากไฟล์ EAS Excel มาวางที่นี่<br><strong>.xlsx / .xls / .csv</strong></div>
+          </div>
+          <div id="eas-bulk-preview" style="margin-top:16px;display:none">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="eas-bulk-preview-title"></div>
+            <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+              <table><thead><tr><th>PO No.</th><th>Name</th><th>EAS No</th><th>EAS Month</th><th>Item</th></tr></thead>
+              <tbody id="eas-bulk-preview-body"></tbody></table>
+            </div>
+            <button class="btn btn-green" id="btn-eas-bulk" onclick="submitEASBulk()" style="margin-top:14px">📑 อัปโหลด EAS</button>
+            <div id="eas-bulk-result" style="display:none;margin-top:14px"></div>
+          </div>
+        </div></div>
+      </div>
     </div>
 
     <!-- EAS PENDING -->
@@ -1289,7 +1328,8 @@ async function submitBulk(){
   setLoad('btn-bulk',false)
   if(r.ok){
     const easMsg=(r.easAdded||r.easUpdated)?` · EAS เพิ่ม ${r.easAdded||0} อัพเดต ${r.easUpdated||0}`:''
-    toast(`สำเร็จ! PO สร้าง ${r.poCreated} แก้ไข ${r.poUpdated} พนักงาน ${r.empAdded}${easMsg} ✅`,'success')
+    const skipMsg=r.poSkipped?` (ข้าม ${r.poSkipped} PO ที่มีอยู่แล้ว)`:''
+    toast(`สำเร็จ! PO ใหม่ ${r.poCreated}${skipMsg} · พนักงาน ${r.empAdded}${easMsg} ✅`,'success')
     // Show EAS result summary if any
     const easResultEl=document.getElementById('bulk-eas-result')
     if(easResultEl&&(r.easAdded||r.easUpdated)){
@@ -1300,6 +1340,67 @@ async function submitBulk(){
       </div>`
     }
     BULK_DATA=[];document.getElementById('bulk-file').value='';loadAll()
+  }else toast(`เกิดข้อผิดพลาด: ${r.error||'ไม่ทราบสาเหตุ'}`,'error')
+}
+
+// ── Bulk Tab Switch ──────────────────────────────────────────
+function switchBulkTab(tab){
+  document.getElementById('bulk-section-po').style.display=tab==='po'?'':'none'
+  document.getElementById('bulk-section-eas').style.display=tab==='eas'?'':'none'
+  document.getElementById('bulk-tab-po').className='btn '+(tab==='po'?'btn-primary':'btn-ghost')
+  document.getElementById('bulk-tab-eas').className='btn '+(tab==='eas'?'btn-green':'btn-ghost')
+  // reset tab style for eas tab
+  if(tab==='eas'){document.getElementById('bulk-tab-eas').style.borderRadius='20px'}
+  document.getElementById('bulk-tab-po').style.borderRadius='20px'
+  document.getElementById('bulk-tab-eas').style.borderRadius='20px'
+}
+
+// ── EAS-Only Bulk Upload ─────────────────────────────────────
+let EAS_BULK_DATA=[]
+function handleEASBulkFile(e){const f=e.target.files[0];if(f)processEASBulk(f)}
+function processEASBulk(file){
+  loadXLSX(()=>{
+    const reader=new FileReader()
+    reader.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:'array'})
+      const ws=wb.Sheets[wb.SheetNames[0]]
+      let headerRow=0
+      const range=XLSX.utils.decode_range(ws['!ref']||'A1:F10')
+      for(let r=0;r<=Math.min(5,range.e.r);r++){
+        let txt=''
+        for(let c=0;c<=5;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell)txt+=String(cell.v||'').trim()+' '}
+        if(txt.includes('PO No')||txt.includes('Name')){headerRow=r;break}
+      }
+      const data=XLSX.utils.sheet_to_json(ws,{defval:'',range:headerRow})
+      const norm=data.map(row=>{const nr={};for(const[k,v]of Object.entries(row))nr[String(k).trim()]=v;return nr})
+      EAS_BULK_DATA=norm
+      document.getElementById('eas-bulk-preview-body').innerHTML=norm.slice(0,10).map(r=>`<tr>
+        <td style="font-weight:600;color:var(--blue)">${r['PO No.']||r['PO_No']||''}</td>
+        <td>${r['Name']||r['name']||''}</td>
+        <td style="color:var(--green);font-weight:600">${r['EAS No']||r['EAS_No']||''}</td>
+        <td style="color:var(--indigo)">${r['EAS Month']||r['EAS_Month']||''}</td>
+        <td style="text-align:center">${r['Item']||r['item']||''}</td>
+      </tr>`).join('')
+      document.getElementById('eas-bulk-preview-title').textContent=`พบ ${norm.length} แถว (แสดง 10 แรก)`
+      document.getElementById('eas-bulk-preview').style.display=''
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+async function submitEASBulk(){
+  if(!EAS_BULK_DATA.length){toast('ไม่มีข้อมูล','error');return}
+  setLoad('btn-eas-bulk',true)
+  const r=await api('POST','/api/eas/bulk',{rows:EAS_BULK_DATA})
+  setLoad('btn-eas-bulk',false)
+  if(r.ok){
+    toast(`บันทึก EAS สำเร็จ! เพิ่มใหม่ ${r.easAdded||0} อัพเดต ${r.easUpdated||0} รายการ ✅`,'success')
+    const resEl=document.getElementById('eas-bulk-result')
+    resEl.style.display=''
+    resEl.innerHTML=`<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:12px 14px;font-size:13px">
+      <div style="font-weight:700;color:#065F46;margin-bottom:6px">✅ อัปโหลด EAS สำเร็จ</div>
+      <div style="color:#047857">เพิ่มใหม่ <strong>${r.easAdded||0}</strong> รายการ · อัพเดต <strong>${r.easUpdated||0}</strong> รายการ</div>
+    </div>`
+    EAS_BULK_DATA=[];document.getElementById('eas-bulk-file').value='';loadAll()
   }else toast(`เกิดข้อผิดพลาด: ${r.error||'ไม่ทราบสาเหตุ'}`,'error')
 }
 

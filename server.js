@@ -236,14 +236,20 @@ app.post('/api/po/bulk',auth,async(req,res)=>{
     const existingPO=await readSheet('PO_MASTER!A2:F')
     const existingEmp=await readSheet('PO_EMPLOYEES!A2:F')
     const now=new Date().toLocaleString('th-TH')
-    let poCreated=0,poUpdated=0,empAdded=0
+    const normDate=v=>String(v||'').trim().replace(/\s+/g,' ')
+    let poCreated=0,poSkipped=0,empAdded=0
     for(const[poNum,data] of Object.entries(poMap)){
-      const i=existingPO.findIndex(r=>r[0]===String(poNum))
+      const i=existingPO.findIndex(r=>String(r[0]).trim()===String(poNum).trim())
       if(i===-1){await appendRow('PO_MASTER',[poNum,data.client,data.start,data.end,req.user.name,now]);poCreated++}
-      else{await updateRow('PO_MASTER',i+2,[poNum,data.client||existingPO[i][1],data.start||existingPO[i][2],data.end||existingPO[i][3],req.user.name,now]);poUpdated++}
+      else poSkipped++ // PO มีอยู่แล้ว → ข้ามเลย ไม่แตะข้อมูลเดิม
     }
     for(const emp of empList){
-      const dup=existingEmp.find(r=>r[0]===emp.poNum&&r[1]===emp.name&&r[2]===emp.start&&r[3]===emp.end)
+      const dup=existingEmp.find(r=>
+        String(r[0]).trim()===String(emp.poNum).trim()&&
+        String(r[1]).trim()===String(emp.name).trim()&&
+        normDate(r[2])===normDate(emp.start)&&
+        normDate(r[3])===normDate(emp.end)
+      )
       if(!dup){await appendRow('PO_EMPLOYEES',[emp.poNum,emp.name,emp.start,emp.end,req.user.name,now]);empAdded++}
     }
     // Process EAS from bulk
@@ -274,8 +280,49 @@ app.post('/api/po/bulk',auth,async(req,res)=>{
         }
       }
     }
-    await log(req.user,'BULK_UPLOAD',`Bulk: PO สร้าง ${poCreated} แก้ไข ${poUpdated} พนักงานเพิ่ม ${empAdded} EAS เพิ่ม ${easAdded} อัพเดต ${easUpdated}`)
-    res.json({ok:true,poCreated,poUpdated,empAdded,easAdded,easUpdated})
+    await log(req.user,'BULK_UPLOAD',`Bulk: PO สร้าง ${poCreated} ข้าม ${poSkipped} พนักงานเพิ่ม ${empAdded} EAS เพิ่ม ${easAdded} อัพเดต ${easUpdated}`)
+    res.json({ok:true,poCreated,poSkipped,empAdded,easAdded,easUpdated})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+
+// EAS-Only Bulk Upload
+app.post('/api/eas/bulk',auth,async(req,res)=>{
+  try{
+    const{rows}=req.body
+    if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
+    const str=v=>(v===null||v===undefined)?'':String(v).trim()
+    let lastPO=''
+    const easList=[]
+    for(const r of rows){
+      const rawPO=str(r['PO No.']??r['PO_No']??r['PONo']??r['po no.']??'')
+      const po=rawPO||lastPO
+      if(rawPO) lastPO=rawPO
+      if(!po) continue
+      const empName=str(r['Name']??r['name']??'')
+      const easNo=str(r['EAS No']??r['EAS_No']??r['EASNo']??'')
+      const easMonth=str(r['EAS Month']??r['EAS_Month']??'')
+      const easItem=str(r['Item']??r['item']??'')
+      if(po&&empName&&easNo&&easMonth) easList.push({poNum:po,empName,month:normalizeMonth(easMonth),easNo,item:easItem})
+    }
+    if(!easList.length) return res.status(400).json({ok:false,error:'ไม่พบข้อมูล EAS ที่ครบถ้วน (ต้องมี PO No., Name, EAS No, EAS Month)'})
+    const existingEAS=await readSheet('EAS!A2:I')
+    const now=new Date().toLocaleString('th-TH')
+    let easAdded=0,easUpdated=0
+    for(const eas of easList){
+      const dupIdx=existingEAS.findIndex(r=>r[0]===eas.poNum&&r[1]===eas.empName&&r[2]===eas.month)
+      if(dupIdx===-1){
+        await appendRow('EAS',[eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now,eas.item])
+        existingEAS.push([eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now,eas.item])
+        easAdded++
+      }else{
+        const row=existingEAS[dupIdx]
+        await updateRow('EAS',dupIdx+2,[row[0],row[1],row[2],eas.easNo,'Placed',row[5]||'',req.user.name,now,eas.item||row[8]||''])
+        existingEAS[dupIdx][3]=eas.easNo
+        easUpdated++
+      }
+    }
+    await log(req.user,'EAS_BULK',`EAS Bulk: เพิ่ม ${easAdded} อัพเดต ${easUpdated} รายการ`)
+    res.json({ok:true,easAdded,easUpdated})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
