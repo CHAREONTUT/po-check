@@ -837,7 +837,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     </div>
     <div class="frow">
       <div class="fg"><label>Status CT</label><input class="fi2" id="tr-status-ct" placeholder="ส่งแล้ว"></div>
-      <div class="fg"><label>วันที่ส่ง</label><input class="fi2" id="tr-sent-date" type="date"></div>
+      <div class="fg"><label id="tr-sent-date-label">วันที่ส่ง</label><input class="fi2" id="tr-sent-date" type="date"></div>
     </div>
     <div class="frow">
       <div class="fg"><label>Status AIS *</label>
@@ -2028,9 +2028,24 @@ function openTrackingModal(idx){
     document.getElementById('tr-tracking').value=row.trackingNo
     document.getElementById('tr-poot').value=row.poOtNo
     document.getElementById('tr-status-ct').value=row.statusCT
-    document.getElementById('tr-sent-date').value=toInputDate(row.sentDate)
+    document.getElementById('tr-sent-date').value=toInputDate(row.sentDate)||row.sentDate||''
     document.getElementById('tr-status-ais').value=row.statusAIS
     document.getElementById('tr-completed-date').value=toInputDate(row.completedDate)
+    const sentInput=document.getElementById('tr-sent-date')
+    const sentLabel=document.getElementById('tr-sent-date-label')
+    if(row.sentDate){
+      sentInput.setAttribute('readonly','readonly')
+      sentInput.style.background='#F1F5F9'
+      sentInput.style.cursor='not-allowed'
+      sentInput.style.color='var(--muted)'
+      sentLabel.innerHTML='วันที่ส่ง <span style="font-size:10px;opacity:.7">🔒</span>'
+    }else{
+      sentInput.removeAttribute('readonly')
+      sentInput.style.background=''
+      sentInput.style.cursor=''
+      sentInput.style.color=''
+      sentLabel.innerHTML='วันที่ส่ง'
+    }
     document.getElementById('tr-material').value=row.materialDoc
     document.getElementById('tr-note').value=row.note
     onTrackingStatusChange()
@@ -2044,6 +2059,12 @@ function openTrackingModal(idx){
     document.getElementById('tr-status-ct').value='ส่งแล้ว'
     document.getElementById('tr-sent-date').value=''
     document.getElementById('tr-status-ais').value=''
+    const sentInputNew=document.getElementById('tr-sent-date')
+    sentInputNew.removeAttribute('readonly')
+    sentInputNew.style.background=''
+    sentInputNew.style.cursor=''
+    sentInputNew.style.color=''
+    document.getElementById('tr-sent-date-label').innerHTML='วันที่ส่ง'
     document.getElementById('tr-completed-date').value=''
     document.getElementById('tr-material').value=''
     document.getElementById('tr-note').value=''

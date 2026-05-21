@@ -584,7 +584,7 @@ app.put('/api/tracking/:rowIdx',auth,async(req,res)=>{
     const{po,type,month,dm,statusCT,sentDate,note,trackingNo,statusAIS,poOtNo,completedDate,materialDoc}=req.body
     await updateRow('TRACKING',sheetRow,[
       po||row[0],type??row[1],month??row[2],dm??row[3],statusCT??row[4],
-      sentDate??row[5],note??row[6],trackingNo||row[7],statusAIS||row[8],
+      row[5]||(sentDate||''),note??row[6],trackingNo||row[7],statusAIS||row[8],
       poOtNo??row[9],completedDate??row[10],materialDoc??row[11],
       req.user.name,new Date().toLocaleString('th-TH')
     ])
