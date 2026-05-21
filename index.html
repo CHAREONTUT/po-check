@@ -561,90 +561,85 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
         </div>
       </div>
 
-      <!-- Stat Cards -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
-        <div class="stat-card sc-blue" style="cursor:default">
-          <div class="stat-icon">📦</div>
-          <div class="stat-num" id="tr-total">—</div>
-          <div class="stat-label">ทั้งหมด</div>
+      <!-- Stat Cards (คลิกได้) -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+        <div id="tr-card-all" class="stat-card sc-blue" onclick="filterByTrackingStatus('')" style="cursor:pointer;padding:12px 16px;transition:all .2s">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div><div class="stat-num" id="tr-total" style="font-size:22px">—</div><div class="stat-label" style="font-size:11px">ทั้งหมด</div></div>
+            <div class="stat-icon" style="margin:0;font-size:20px">📦</div>
+          </div>
+          <div style="font-size:10px;color:var(--blue);margin-top:6px;font-weight:600">คลิกดูทั้งหมด →</div>
         </div>
-        <div class="stat-card sc-amber" style="cursor:default">
-          <div class="stat-icon">⏳</div>
-          <div class="stat-num" id="tr-waiting">—</div>
-          <div class="stat-label">Waiting</div>
+        <div id="tr-card-waiting" class="stat-card sc-amber" onclick="filterByTrackingStatus('Waiting for AIS to proceed.')" style="cursor:pointer;padding:12px 16px;transition:all .2s">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div><div class="stat-num" id="tr-waiting" style="font-size:22px">—</div><div class="stat-label" style="font-size:11px">Waiting</div></div>
+            <div class="stat-icon" style="margin:0;font-size:20px">⏳</div>
+          </div>
+          <div style="font-size:10px;color:#D97706;margin-top:6px;font-weight:600">คลิกดูรายการ →</div>
         </div>
-        <div class="stat-card sc-teal" style="cursor:default">
-          <div class="stat-icon">✅</div>
-          <div class="stat-num" id="tr-completed">—</div>
-          <div class="stat-label">Completed</div>
+        <div id="tr-card-completed" class="stat-card sc-teal" onclick="filterByTrackingStatus('AIS processing completed')" style="cursor:pointer;padding:12px 16px;transition:all .2s">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div><div class="stat-num" id="tr-completed" style="font-size:22px">—</div><div class="stat-label" style="font-size:11px">Completed</div></div>
+            <div class="stat-icon" style="margin:0;font-size:20px">✅</div>
+          </div>
+          <div style="font-size:10px;color:#0D9488;margin-top:6px;font-weight:600">คลิกดูรายการ →</div>
         </div>
-        <div class="stat-card sc-coral" style="cursor:default">
-          <div class="stat-icon">❌</div>
-          <div class="stat-num" id="tr-reject">—</div>
-          <div class="stat-label">Reject</div>
+        <div id="tr-card-reject" class="stat-card sc-coral" onclick="filterByTrackingStatus('Reject')" style="cursor:pointer;padding:12px 16px;transition:all .2s">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div><div class="stat-num" id="tr-reject" style="font-size:22px">—</div><div class="stat-label" style="font-size:11px">Reject</div></div>
+            <div class="stat-icon" style="margin:0;font-size:20px">❌</div>
+          </div>
+          <div style="font-size:10px;color:#E11D48;margin-top:6px;font-weight:600">คลิกดูรายการ →</div>
         </div>
       </div>
 
-      <!-- Filters -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-          <div class="fg" style="margin:0;min-width:160px">
-            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Status AIS</label>
-            <select class="fi2" id="tr-f-status" onchange="renderTracking()" style="padding:8px 10px;font-size:13px">
-              <option value="">— ทั้งหมด —</option>
-              <option value="Waiting for AIS to proceed.">⏳ Waiting</option>
-              <option value="AIS processing completed">✅ Completed</option>
-              <option value="Reject">❌ Reject</option>
-            </select>
-          </div>
-          <div class="fg" style="margin:0;min-width:140px">
-            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">ประเภท</label>
-            <select class="fi2" id="tr-f-type" onchange="renderTracking()" style="padding:8px 10px;font-size:13px">
-              <option value="">— ทั้งหมด —</option>
-              <option>OT</option><option>SES</option><option>OT_SES</option><option>Migo</option>
-            </select>
-          </div>
-          <div class="fg" style="margin:0;flex:1;min-width:200px">
-            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">ค้นหา</label>
-            <input class="fi2" id="tr-search" placeholder="🔍 ค้นหา PO, Tracking No., DM..." oninput="renderTracking()" style="padding:8px 12px;font-size:13px">
-          </div>
-          <button class="btn btn-ghost" onclick="clearTrackingFilters()">ล้างตัวกรอง</button>
-        </div>
+      <!-- Filters (compact) -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <select class="fi2" id="tr-f-status" onchange="renderTracking()" style="padding:7px 10px;font-size:12px;width:auto">
+          <option value="">🔽 Status AIS ทั้งหมด</option>
+          <option value="Waiting for AIS to proceed.">⏳ Waiting</option>
+          <option value="AIS processing completed">✅ Completed</option>
+          <option value="Reject">❌ Reject</option>
+        </select>
+        <select class="fi2" id="tr-f-type" onchange="renderTracking()" style="padding:7px 10px;font-size:12px;width:auto">
+          <option value="">🔽 ประเภท ทั้งหมด</option>
+          <option>OT</option><option>SES</option><option>OT_SES</option><option>Migo</option>
+        </select>
+        <input class="fi2" id="tr-search" placeholder="🔍 ค้นหา PO, Tracking No., DM, Note..." oninput="renderTracking()" style="padding:7px 12px;font-size:12px;flex:1;min-width:180px">
+        <button class="btn btn-ghost btn-sm" onclick="clearTrackingFilters()">✕ ล้าง</button>
+        <span id="tracking-count" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
       </div>
 
-      <!-- Table -->
-      <div class="card" style="overflow:hidden">
-        <div style="overflow-x:auto">
-          <table style="min-width:1400px;border-collapse:collapse;font-size:12.5px">
+      <!-- Table พอดีหน้าจอ -->
+      <div style="background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;height:calc(100vh - 310px)">
+        <div style="overflow-y:auto;flex:1">
+          <table style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px">
             <colgroup>
-              <col style="width:120px"><col style="width:72px"><col style="width:90px">
-              <col style="width:170px"><col style="width:90px"><col style="width:90px">
-              <col style="width:180px"><col style="width:190px"><col style="width:150px">
-              <col style="width:105px"><col style="width:105px"><col style="width:190px">
-              <col style="width:76px">
+              <col style="width:9%"><col style="width:4.5%"><col style="width:6%">
+              <col style="width:10%"><col style="width:5.5%"><col style="width:6.5%">
+              <col style="width:13%"><col style="width:14%"><col style="width:9%">
+              <col style="width:6%"><col style="width:7%"><col style="width:7%">
+              <col style="width:2%">
             </colgroup>
-            <thead>
-              <tr style="background:#1E3A5F;color:#fff;font-size:11.5px;letter-spacing:.02em">
-                <th style="padding:9px 10px;text-align:left;font-weight:700;white-space:nowrap;border-right:1px solid rgba(255,255,255,.12)">เลข PO</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">ประเภท</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">MM/YYYY</th>
-                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Department Manager</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Status CT</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">วันที่ส่ง</th>
-                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Note</th>
-                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Tracking No.</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Status AIS</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">PO_OT No.</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">วันที่ completed</th>
-                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Material Document</th>
-                <th style="padding:9px 8px;text-align:center;font-weight:700">จัดการ</th>
+            <thead style="position:sticky;top:0;z-index:2">
+              <tr style="background:#1E3A5F;color:#fff;font-size:11px">
+                <th style="padding:8px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">เลข PO</th>
+                <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">ประเภท</th>
+                <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">MM/YYYY</th>
+                <th style="padding:8px 8px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">DM</th>
+                <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">Status CT</th>
+                <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">วันที่ส่ง</th>
+                <th style="padding:8px 8px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">Note</th>
+                <th style="padding:8px 8px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">Tracking No.</th>
+                <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">Status AIS</th>
+                <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">PO_OT No.</th>
+                <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">วันที่ completed</th>
+                <th style="padding:8px 8px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">Material Doc.</th>
+                <th style="padding:8px 4px;text-align:center;font-weight:700"></th>
               </tr>
             </thead>
             <tbody id="tracking-tbody"></tbody>
           </table>
-        </div>
-        <div id="tracking-footer" style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center">
-          <span id="tracking-count"></span>
         </div>
       </div>
     </div>
@@ -1916,39 +1911,53 @@ function renderTracking(){
     const style=TR_ROW_STYLE[r.statusAIS]||{bg:i%2===0?'#fff':'#F8FAFC',border:'#E2E8F0',dot:'#94A3B8'}
     const bg=style.bg
     const br=style.border
-    const tdStyle=`padding:7px 10px;border-bottom:1px solid ${br};border-right:${bd};vertical-align:middle`
     const fmtD=v=>v?v.replace(/(\d{4})-(\d{2})-(\d{2}).*/,'$3/$2/$1'):''
-    const noteShort=r.note.length>35?r.note.substring(0,35)+'…':r.note
-    return`<tr style="background:${bg}">
-      <td style="${tdStyle};font-weight:600;color:var(--navy);white-space:nowrap">${esc(r.po)}</td>
-      <td style="${tdStyle};text-align:center"><span style="background:#EFF6FF;color:#1E40AF;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px">${esc(r.type)}</span></td>
-      <td style="${tdStyle};text-align:center;color:var(--muted);white-space:nowrap">${esc(r.month)}</td>
-      <td style="${tdStyle};white-space:nowrap">${esc(r.dm)}</td>
-      <td style="${tdStyle};text-align:center"><span style="background:#D1FAE5;color:#065F46;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px">${esc(r.statusCT)||'—'}</span></td>
-      <td style="${tdStyle};text-align:center;color:var(--muted);white-space:nowrap;font-size:12px">${fmtD(r.sentDate)}</td>
-      <td style="${tdStyle};max-width:180px" title="${esc(r.note)}"><span style="color:${r.statusAIS==='Reject'?'#BE123C':'inherit'}">${esc(noteShort)}</span></td>
-      <td style="${tdStyle};font-family:monospace;font-size:11.5px;white-space:nowrap;color:#1E3A5F">${esc(r.trackingNo)}</td>
-      <td style="${tdStyle};text-align:center;white-space:nowrap">
-        <span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1.5px solid ${br};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${style.dot}">
-          <span style="width:6px;height:6px;border-radius:50%;background:${style.dot};flex-shrink:0"></span>
-          ${st.label}
+    // cell style พื้นฐาน — overflow hidden ทุก cell
+    const td=(extra='')=>`padding:7px 8px;border-bottom:1px solid ${br};border-right:${bd};vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${extra}`
+    return`<tr style="background:${bg}" title="">
+      <td style="${td('font-weight:600;color:var(--navy);font-size:11.5px')}" title="${esc(r.po)}">${esc(r.po)}</td>
+      <td style="${td('text-align:center')}"><span style="background:#EFF6FF;color:#1E40AF;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px">${esc(r.type)}</span></td>
+      <td style="${td('text-align:center;color:var(--muted);font-size:11px')}">${esc(r.month)}</td>
+      <td style="${td('font-size:11px')}" title="${esc(r.dm)}">${esc(r.dm)}</td>
+      <td style="${td('text-align:center')}"><span style="background:#D1FAE5;color:#065F46;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px">${esc(r.statusCT)||'—'}</span></td>
+      <td style="${td('text-align:center;color:var(--muted);font-size:11px')}">${fmtD(r.sentDate)}</td>
+      <td style="${td('font-size:11px')}" title="${esc(r.note)}"><span style="color:${r.statusAIS==='Reject'?'#BE123C':'inherit'}">${esc(r.note)}</span></td>
+      <td style="${td('font-family:monospace;font-size:10.5px;color:#1E3A5F')}" title="${esc(r.trackingNo)}">${esc(r.trackingNo)}</td>
+      <td style="${td('text-align:center')}">
+        <span style="display:inline-flex;align-items:center;gap:4px;border:1.5px solid ${br};border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;color:${style.dot}">
+          <span style="width:5px;height:5px;border-radius:50%;background:${style.dot};flex-shrink:0"></span>${st.label}
         </span>
       </td>
-      <td style="${tdStyle};text-align:center;font-size:12px;color:var(--muted)">${esc(r.poOtNo)||'—'}</td>
-      <td style="${tdStyle};text-align:center;color:var(--muted);white-space:nowrap;font-size:12px">${fmtD(r.completedDate)||'—'}</td>
-      <td style="${tdStyle};font-size:11.5px;color:var(--muted);max-width:180px" title="${esc(r.materialDoc)}">${esc(r.materialDoc)||'—'}</td>
-      <td style="padding:7px 8px;border-bottom:1px solid ${br};text-align:center;white-space:nowrap">
-        <button class="btn btn-amber btn-sm" onclick="openTrackingModal(${r.idx})" title="แก้ไข">✏️</button>
-        <button class="btn btn-red btn-sm" onclick="deleteTracking(${r.idx},'${esc(r.trackingNo)}')" title="ลบ">🗑️</button>
+      <td style="${td('text-align:center;font-size:11px;color:var(--muted)')}" title="${esc(r.poOtNo)}">${esc(r.poOtNo)||'—'}</td>
+      <td style="${td('text-align:center;color:var(--muted);font-size:11px')}">${fmtD(r.completedDate)||'—'}</td>
+      <td style="${td('font-size:11px;color:var(--muted)')}" title="${esc(r.materialDoc)}">${esc(r.materialDoc)||'—'}</td>
+      <td style="padding:4px;border-bottom:1px solid ${br};text-align:center;white-space:nowrap">
+        <button class="btn btn-amber btn-sm" onclick="openTrackingModal(${r.idx})" title="แก้ไข" style="padding:3px 6px;font-size:11px">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="deleteTracking(${r.idx},'${esc(r.trackingNo)}')" title="ลบ" style="padding:3px 6px;font-size:11px">🗑️</button>
       </td>
     </tr>`
   }).join('')
 }
 
+function filterByTrackingStatus(status){
+  document.getElementById('tr-f-status').value=status
+  renderTracking()
+  // highlight active card
+  const map={'':'tr-card-all','Waiting for AIS to proceed.':'tr-card-waiting','AIS processing completed':'tr-card-completed','Reject':'tr-card-reject'}
+  Object.values(map).forEach(id=>{
+    const el=document.getElementById(id)
+    if(el) el.style.outline=''
+  })
+  const active=map[status]
+  if(active){const el=document.getElementById(active);if(el) el.style.outline='3px solid #3B82F6'}
+}
 function clearTrackingFilters(){
   document.getElementById('tr-f-status').value=''
   document.getElementById('tr-f-type').value=''
   document.getElementById('tr-search').value=''
+  Object.values({a:'tr-card-all',w:'tr-card-waiting',c:'tr-card-completed',r:'tr-card-reject'}).forEach(id=>{
+    const el=document.getElementById(id);if(el) el.style.outline=''
+  })
   renderTracking()
 }
 
