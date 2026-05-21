@@ -605,7 +605,28 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
           <option value="">🔽 ประเภท ทั้งหมด</option>
           <option>OT</option><option>SES</option><option>OT_SES</option><option>Migo</option>
         </select>
-        <input class="fi2" id="tr-search" placeholder="🔍 ค้นหา PO, Tracking No., DM, Note..." oninput="renderTracking()" style="padding:7px 12px;font-size:12px;flex:1;min-width:180px">
+        <select class="fi2" id="tr-f-dm" onchange="renderTracking()" style="padding:7px 10px;font-size:12px;width:auto">
+          <option value="">🔽 DM ทั้งหมด</option>
+          <option>K.Worawut Jampama</option>
+          <option>K.Asmavee Noinongyao</option>
+          <option>K.Sakda Eamwiwattanakool</option>
+          <option>K.Jariya Somjitchob</option>
+          <option>K.Bundit Kasemassawachanon</option>
+          <option>K.Watchara Yodin</option>
+          <option>K.Sureeporn Suksumak</option>
+          <option>K.Sanya Sirimongkol</option>
+          <option>K.Navarat Rodprapakorn</option>
+          <option>K.Terdsak Sukumsirichart</option>
+          <option>K.Worawadee Keinprasit</option>
+          <option>K.Santichai Wongwai</option>
+          <option>K.Warayuth Wongpaiboonwattana</option>
+          <option>K.Areeya Hanphichanchai</option>
+          <option>K.Phanuwat Chumrusch</option>
+          <option>K.Akekachai Ponil</option>
+          <option>K.Kosit Chotibut</option>
+          <option>K.Thawatchai Banmai</option>
+        </select>
+        <input class="fi2" id="tr-search" placeholder="🔍 ค้นหา PO, Tracking No., Note..." oninput="renderTracking()" style="padding:7px 12px;font-size:12px;flex:1;min-width:160px">
         <button class="btn btn-ghost btn-sm" onclick="clearTrackingFilters()">✕ ล้าง</button>
         <span id="tracking-count" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
       </div>
@@ -786,7 +807,29 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     </div>
     <div class="frow">
       <div class="fg"><label>MM/YYYY</label><input class="fi2" id="tr-month" placeholder="10/2025"></div>
-      <div class="fg"><label>Department Manager</label><input class="fi2" id="tr-dm" placeholder="K.ชื่อ นามสกุล"></div>
+      <div class="fg"><label>Department Manager</label>
+        <select class="fi2" id="tr-dm">
+          <option value="">— เลือก DM —</option>
+          <option>K.Worawut Jampama</option>
+          <option>K.Asmavee Noinongyao</option>
+          <option>K.Sakda Eamwiwattanakool</option>
+          <option>K.Jariya Somjitchob</option>
+          <option>K.Bundit Kasemassawachanon</option>
+          <option>K.Watchara Yodin</option>
+          <option>K.Sureeporn Suksumak</option>
+          <option>K.Sanya Sirimongkol</option>
+          <option>K.Navarat Rodprapakorn</option>
+          <option>K.Terdsak Sukumsirichart</option>
+          <option>K.Worawadee Keinprasit</option>
+          <option>K.Santichai Wongwai</option>
+          <option>K.Warayuth Wongpaiboonwattana</option>
+          <option>K.Areeya Hanphichanchai</option>
+          <option>K.Phanuwat Chumrusch</option>
+          <option>K.Akekachai Ponil</option>
+          <option>K.Kosit Chotibut</option>
+          <option>K.Thawatchai Banmai</option>
+        </select>
+      </div>
     </div>
     <div class="frow">
       <div class="fg"><label>Tracking No. *</label><input class="fi2" id="tr-tracking" placeholder="ttk-20260212-164940164"></div>
@@ -1891,9 +1934,11 @@ function renderTracking(){
   const fStatus=document.getElementById('tr-f-status')?.value||''
   const fType=document.getElementById('tr-f-type')?.value||''
   const fSearch=(document.getElementById('tr-search')?.value||'').toLowerCase()
+  const fDM=document.getElementById('tr-f-dm')?.value||''
   let rows=C_TRACKING.filter(r=>{
     if(fStatus&&r.statusAIS!==fStatus) return false
     if(fType&&r.type!==fType) return false
+    if(fDM&&r.dm!==fDM) return false
     if(fSearch&&![r.po,r.trackingNo,r.dm,r.note,r.month,r.poOtNo,r.materialDoc].some(v=>v.toLowerCase().includes(fSearch))) return false
     return true
   })
@@ -1954,6 +1999,7 @@ function filterByTrackingStatus(status){
 function clearTrackingFilters(){
   document.getElementById('tr-f-status').value=''
   document.getElementById('tr-f-type').value=''
+  document.getElementById('tr-f-dm').value=''
   document.getElementById('tr-search').value=''
   Object.values({a:'tr-card-all',w:'tr-card-waiting',c:'tr-card-completed',r:'tr-card-reject'}).forEach(id=>{
     const el=document.getElementById(id);if(el) el.style.outline=''
