@@ -237,6 +237,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <button class="nav-item" onclick="nav('bulk',this)">📤 Bulk Upload</button>
     <button class="nav-item" onclick="nav('eas-pending',this);loadPending()">🔴 EAS ยังไม่วาง</button>
     <button class="nav-item" onclick="nav('eas-placed',this);loadPlaced()">✅ EAS วางแล้ว</button>
+    <div class="nav-sec">Tracking</div>
+    <button class="nav-item" onclick="nav('tracking',this);loadTracking()">📦 Tracking No.</button>
     <button class="logout-btn" onclick="doLogout()">🚪 ออกจากระบบ</button>
   </aside>
 
@@ -547,6 +549,88 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
       </div></div>
     </div>
 
+    <!-- TRACKING NO. -->
+    <div class="page" id="page-tracking">
+      <div class="topbar">
+        <div><div class="page-title">📦 ระบบตรวจสอบ Tracking No.</div><div class="page-sub">ติดตามสถานะการส่งเอกสาร PO / OT / SES ไปยัง AIS</div></div>
+        <div class="topbar-right">
+          <button class="btn btn-ghost" onclick="loadTracking()">🔄 รีเฟรช</button>
+          <button class="btn btn-green" onclick="exportTracking()">📥 Export Excel</button>
+          <button class="btn btn-primary" onclick="openTrackingModal()">➕ เพิ่มรายการ</button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+        <div class="stat-card sc-blue" style="cursor:default">
+          <div class="stat-icon">📦</div>
+          <div class="stat-num" id="tr-total">—</div>
+          <div class="stat-label">ทั้งหมด</div>
+        </div>
+        <div class="stat-card sc-amber" style="cursor:default">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-num" id="tr-waiting">—</div>
+          <div class="stat-label">Waiting</div>
+        </div>
+        <div class="stat-card sc-teal" style="cursor:default">
+          <div class="stat-icon">✅</div>
+          <div class="stat-num" id="tr-completed">—</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card sc-coral" style="cursor:default">
+          <div class="stat-icon">❌</div>
+          <div class="stat-num" id="tr-reject">—</div>
+          <div class="stat-label">Reject</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="fg" style="margin:0;min-width:160px">
+            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Status AIS</label>
+            <select class="fi2" id="tr-f-status" onchange="renderTracking()" style="padding:8px 10px;font-size:13px">
+              <option value="">— ทั้งหมด —</option>
+              <option value="Waiting for AIS to proceed.">⏳ Waiting</option>
+              <option value="AIS processing completed">✅ Completed</option>
+              <option value="Reject">❌ Reject</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0;min-width:140px">
+            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">ประเภท</label>
+            <select class="fi2" id="tr-f-type" onchange="renderTracking()" style="padding:8px 10px;font-size:13px">
+              <option value="">— ทั้งหมด —</option>
+              <option>OT</option><option>SES</option><option>OT_SES</option><option>Migo</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0;flex:1;min-width:200px">
+            <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">ค้นหา</label>
+            <input class="fi2" id="tr-search" placeholder="🔍 ค้นหา PO, Tracking No., DM..." oninput="renderTracking()" style="padding:8px 12px;font-size:13px">
+          </div>
+          <button class="btn btn-ghost" onclick="clearTrackingFilters()">ล้างตัวกรอง</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card"><div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="padding-left:14px">เลข PO</th>
+            <th>ประเภท</th>
+            <th>MM/YYYY</th>
+            <th>Department Manager</th>
+            <th>Tracking No.</th>
+            <th>Status AIS</th>
+            <th>วันที่ส่ง</th>
+            <th>วันที่ Completed</th>
+            <th>Note</th>
+            <th>จัดการ</th>
+          </tr></thead>
+          <tbody id="tracking-tbody"></tbody>
+        </table>
+      </div></div>
+    </div>
+
   </main>
 </div>
 
@@ -638,6 +722,55 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-primary" onclick="saveEditEmployee()">💾 บันทึก</button>
       <button class="btn btn-ghost" onclick="closeM('m-emp')">ยกเลิก</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODAL: Tracking Add/Edit -->
+<div class="mbg" id="m-tracking"><div class="modal" style="max-width:620px">
+  <div class="modal-hdr"><div class="modal-title" id="m-tracking-title">➕ เพิ่ม Tracking No.</div><button class="modal-x" onclick="closeM('m-tracking')">✕</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="tr-edit-idx">
+    <div class="frow">
+      <div class="fg"><label>เลข PO *</label><input class="fi2" id="tr-po" placeholder="3000017066"></div>
+      <div class="fg"><label>ประเภท</label>
+        <select class="fi2" id="tr-type">
+          <option value="">— เลือก —</option>
+          <option>OT</option><option>SES</option><option>OT_SES</option><option>Migo</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>MM/YYYY</label><input class="fi2" id="tr-month" placeholder="10/2025"></div>
+      <div class="fg"><label>Department Manager</label><input class="fi2" id="tr-dm" placeholder="K.ชื่อ นามสกุล"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Tracking No. *</label><input class="fi2" id="tr-tracking" placeholder="ttk-20260212-164940164"></div>
+      <div class="fg"><label>PO_OT No.</label><input class="fi2" id="tr-poot" placeholder="(ถ้ามี)"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Status CT</label><input class="fi2" id="tr-status-ct" placeholder="ส่งแล้ว"></div>
+      <div class="fg"><label>วันที่ส่ง</label><input class="fi2" id="tr-sent-date" type="date"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Status AIS *</label>
+        <select class="fi2" id="tr-status-ais" onchange="onTrackingStatusChange()">
+          <option value="">— เลือก —</option>
+          <option value="Waiting for AIS to proceed.">⏳ Waiting for AIS to proceed.</option>
+          <option value="AIS processing completed">✅ AIS processing completed</option>
+          <option value="Reject">❌ Reject</option>
+        </select>
+      </div>
+      <div class="fg"><label>วันที่ Completed</label><input class="fi2" id="tr-completed-date" type="date"></div>
+    </div>
+    <div class="fg"><label>Material Document (Acceptance No.)</label><input class="fi2" id="tr-material" placeholder="(ถ้ามี)"></div>
+    <div class="fg" id="tr-note-wrap">
+      <label>Note <span id="tr-note-hint" style="color:var(--coral);font-size:11px"></span></label>
+      <textarea class="fi2" id="tr-note" rows="3" placeholder="หมายเหตุ / เหตุผล Reject..." style="resize:vertical"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" id="btn-tr-save" onclick="saveTracking()">💾 บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeM('m-tracking')">ยกเลิก</button>
     </div>
   </div>
 </div></div>
@@ -1111,7 +1244,9 @@ function cancelPOEdit(){
 
 function askDel(p){DEL_TARGET=p;document.getElementById('del-num').textContent=p;document.getElementById('m-del').classList.add('show')}
 async function confirmDel(){
-  closeM('m-del');spin(true)
+  closeM('m-del')
+  if(window._delConfirmFn){const fn=window._delConfirmFn;window._delConfirmFn=null;await fn();return}
+  spin(true)
   const r=await api('DELETE',`/api/po/${enc(DEL_TARGET)}`);spin(false)
   if(r.ok){toast('ลบ PO สำเร็จ','success');loadAll()}else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
@@ -1678,6 +1813,190 @@ async function saveEditEmployee(){
   if(r.ok){toast('แก้ไขพนักงานสำเร็จ ✅','success');closeM('m-emp');loadAll();showPODetail(poNum)}
   else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
+
+// ── TRACKING ──────────────────────────────────────────────────
+let C_TRACKING=[]
+const AIS_STATUS={
+  'Waiting for AIS to proceed.':{label:'Waiting',cls:'t-amber',icon:'⏳'},
+  'AIS processing completed':{label:'Completed',cls:'t-green',icon:'✅'},
+  'Reject':{label:'Reject',cls:'t-red',icon:'❌'}
+}
+
+async function loadTracking(){
+  spin(true)
+  const[r,s]=await Promise.all([api('GET','/api/tracking'),api('GET','/api/tracking/summary')])
+  spin(false)
+  if(!r.ok){toast('โหลด Tracking ไม่ได้','error');return}
+  C_TRACKING=r.data||[]
+  if(s.ok){
+    document.getElementById('tr-total').textContent=s.total
+    document.getElementById('tr-waiting').textContent=s.waiting
+    document.getElementById('tr-completed').textContent=s.completed
+    document.getElementById('tr-reject').textContent=s.reject
+  }
+  renderTracking()
+}
+
+function renderTracking(){
+  const fStatus=document.getElementById('tr-f-status')?.value||''
+  const fType=document.getElementById('tr-f-type')?.value||''
+  const fSearch=(document.getElementById('tr-search')?.value||'').toLowerCase()
+  let rows=C_TRACKING.filter(r=>{
+    if(fStatus&&r.statusAIS!==fStatus) return false
+    if(fType&&r.type!==fType) return false
+    if(fSearch&&!r.po.toLowerCase().includes(fSearch)&&!r.trackingNo.toLowerCase().includes(fSearch)&&!r.dm.toLowerCase().includes(fSearch)&&!r.note.toLowerCase().includes(fSearch)) return false
+    return true
+  })
+  const tbody=document.getElementById('tracking-tbody')
+  if(!tbody) return
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">ไม่พบรายการ</td></tr>'
+    return
+  }
+  tbody.innerHTML=rows.map(function(r){
+    const st=AIS_STATUS[r.statusAIS]||{label:r.statusAIS,cls:'t-amber',icon:'❓'}
+    const noteShort=r.note.length>40?r.note.substring(0,40)+'...':r.note
+    return'<tr>'+
+      '<td style="padding-left:14px;font-weight:600;color:var(--blue)">'+esc(r.po)+'</td>'+
+      '<td><span class="tag" style="background:#EFF6FF;color:#1D4ED8">'+esc(r.type)+'</span></td>'+
+      '<td style="font-size:12px;color:var(--muted)">'+esc(r.month)+'</td>'+
+      '<td style="font-size:12px">'+esc(r.dm)+'</td>'+
+      '<td style="font-size:11px;font-family:monospace;color:var(--navy)">'+esc(r.trackingNo)+'</td>'+
+      '<td><span class="tag '+st.cls+'">'+st.icon+' '+st.label+'</span></td>'+
+      '<td style="font-size:12px;color:var(--muted)">'+esc(r.sentDate)+'</td>'+
+      '<td style="font-size:12px;color:var(--muted)">'+esc(r.completedDate)+'</td>'+
+      '<td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.note)+'">'+
+        (r.statusAIS==='Reject'?'<span style="color:var(--coral)">'+esc(noteShort)+'</span>':esc(noteShort))+
+      '</td>'+
+      '<td style="white-space:nowrap">'+
+        '<button class="btn btn-amber btn-sm" onclick="openTrackingModal('+r.idx+')">✏️</button> '+
+        '<button class="btn btn-red btn-sm" onclick="deleteTracking('+r.idx+',\''+esc(r.trackingNo)+'\')">🗑️</button>'+
+      '</td>'+
+    '</tr>'
+  }).join('')
+}
+
+function clearTrackingFilters(){
+  document.getElementById('tr-f-status').value=''
+  document.getElementById('tr-f-type').value=''
+  document.getElementById('tr-search').value=''
+  renderTracking()
+}
+
+function onTrackingStatusChange(){
+  const st=document.getElementById('tr-status-ais').value
+  const hint=document.getElementById('tr-note-hint')
+  if(st==='Reject') hint.textContent='* กรุณาใส่เหตุผล'
+  else hint.textContent=''
+}
+
+function openTrackingModal(idx){
+  document.getElementById('tr-edit-idx').value=idx||''
+  const isEdit=!!idx
+  document.getElementById('m-tracking-title').textContent=isEdit?'✏️ แก้ไข Tracking No.':'➕ เพิ่ม Tracking No.'
+  if(isEdit){
+    const row=C_TRACKING.find(r=>r.idx===idx)
+    if(!row) return
+    document.getElementById('tr-po').value=row.po
+    document.getElementById('tr-type').value=row.type
+    document.getElementById('tr-month').value=row.month
+    document.getElementById('tr-dm').value=row.dm
+    document.getElementById('tr-tracking').value=row.trackingNo
+    document.getElementById('tr-poot').value=row.poOtNo
+    document.getElementById('tr-status-ct').value=row.statusCT
+    document.getElementById('tr-sent-date').value=toInputDate(row.sentDate)
+    document.getElementById('tr-status-ais').value=row.statusAIS
+    document.getElementById('tr-completed-date').value=toInputDate(row.completedDate)
+    document.getElementById('tr-material').value=row.materialDoc
+    document.getElementById('tr-note').value=row.note
+    onTrackingStatusChange()
+  }else{
+    document.getElementById('tr-po').value=''
+    document.getElementById('tr-type').value=''
+    document.getElementById('tr-month').value=''
+    document.getElementById('tr-dm').value=''
+    document.getElementById('tr-tracking').value=''
+    document.getElementById('tr-poot').value=''
+    document.getElementById('tr-status-ct').value='ส่งแล้ว'
+    document.getElementById('tr-sent-date').value=''
+    document.getElementById('tr-status-ais').value=''
+    document.getElementById('tr-completed-date').value=''
+    document.getElementById('tr-material').value=''
+    document.getElementById('tr-note').value=''
+    document.getElementById('tr-note-hint').textContent=''
+  }
+  document.getElementById('m-tracking').classList.add('show')
+}
+
+function toInputDate(val){
+  if(!val) return ''
+  if(typeof val==='string'&&val.includes('T')) return val.substring(0,10)
+  return ''
+}
+
+async function saveTracking(){
+  const idx=document.getElementById('tr-edit-idx').value
+  const body={
+    po:document.getElementById('tr-po').value.trim(),
+    type:document.getElementById('tr-type').value,
+    month:document.getElementById('tr-month').value.trim(),
+    dm:document.getElementById('tr-dm').value.trim(),
+    statusCT:document.getElementById('tr-status-ct').value.trim(),
+    sentDate:document.getElementById('tr-sent-date').value,
+    note:document.getElementById('tr-note').value.trim(),
+    trackingNo:document.getElementById('tr-tracking').value.trim(),
+    statusAIS:document.getElementById('tr-status-ais').value,
+    poOtNo:document.getElementById('tr-poot').value.trim(),
+    completedDate:document.getElementById('tr-completed-date').value,
+    materialDoc:document.getElementById('tr-material').value.trim()
+  }
+  if(!body.po||!body.trackingNo||!body.statusAIS){toast('กรุณากรอก PO, Tracking No. และ Status AIS','error');return}
+  if(body.statusAIS==='Reject'&&!body.note){toast('กรุณาใส่หมายเหตุสำหรับ Reject','error');return}
+  const btn=document.getElementById('btn-tr-save');btn.disabled=true
+  const r=idx?await api('PUT',`/api/tracking/${idx}`,body):await api('POST','/api/tracking',body)
+  btn.disabled=false
+  if(r.ok){
+    toast(idx?'แก้ไขสำเร็จ ✅':'เพิ่มสำเร็จ ✅','success')
+    closeM('m-tracking');loadTracking()
+  }else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+
+function deleteTracking(idx,trackingNo){
+  document.getElementById('del-num').textContent='Tracking: '+trackingNo
+  document.getElementById('m-del').classList.add('show')
+  window._delConfirmFn=async function(){
+    const r=await api('DELETE',`/api/tracking/${idx}`)
+    if(r.ok){toast('ลบสำเร็จ','success');loadTracking()}
+    else toast(r.error||'เกิดข้อผิดพลาด','error')
+  }
+}
+
+function exportTracking(){
+  loadXLSX(function(){
+    const fStatus=document.getElementById('tr-f-status')?.value||''
+    const fType=document.getElementById('tr-f-type')?.value||''
+    const fSearch=(document.getElementById('tr-search')?.value||'').toLowerCase()
+    let rows=C_TRACKING.filter(r=>{
+      if(fStatus&&r.statusAIS!==fStatus) return false
+      if(fType&&r.type!==fType) return false
+      if(fSearch&&!r.po.toLowerCase().includes(fSearch)&&!r.trackingNo.toLowerCase().includes(fSearch)&&!r.dm.toLowerCase().includes(fSearch)) return false
+      return true
+    })
+    const data=rows.map(r=>({
+      'เลข PO':r.po,'ประเภท':r.type,'MM/YYYY':r.month,'Department Manager':r.dm,
+      'Status CT':r.statusCT,'วันที่ส่ง':r.sentDate,'Tracking No.':r.trackingNo,
+      'Status AIS':r.statusAIS,'PO_OT No.':r.poOtNo,'วันที่ Completed':r.completedDate,
+      'Material Document':r.materialDoc,'Note':r.note
+    }))
+    const ws=XLSX.utils.json_to_sheet(data)
+    const wb=XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb,ws,'Tracking')
+    XLSX.writeFile(wb,'tracking_export_'+new Date().toISOString().slice(0,10)+'.xlsx')
+    toast('Export สำเร็จ','success')
+  })
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 // ── Init ──────────────────────────────────────────────────────
 if(TOKEN){

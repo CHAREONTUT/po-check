@@ -538,6 +538,72 @@ app.get('/api/eas/summary/today',auth,async(req,res)=>{
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
+// TRACKING
+// cols: PO|ประเภท|MM/YYYY|DM|StatusCT|วันที่ส่ง|Note|TrackingNo|StatusAIS|PO_OT_No|วันที่completed|MaterialDoc|CreatedBy|CreatedAt
+app.get('/api/tracking',auth,async(req,res)=>{
+  try{
+    const rows=await readSheet('TRACKING!A2:N')
+    const{dm,type,status}=req.query
+    let data=rows.map((r,i)=>({
+      idx:i+2,po:r[0]||'',type:r[1]||'',month:r[2]||'',dm:r[3]||'',
+      statusCT:r[4]||'',sentDate:r[5]||'',note:r[6]||'',trackingNo:r[7]||'',
+      statusAIS:r[8]||'',poOtNo:r[9]||'',completedDate:r[10]||'',
+      materialDoc:r[11]||'',createdBy:r[12]||'',createdAt:r[13]||''
+    })).filter(r=>r.po)
+    if(dm) data=data.filter(r=>r.dm===dm)
+    if(type) data=data.filter(r=>r.type===type)
+    if(status) data=data.filter(r=>r.statusAIS===status)
+    res.json({ok:true,data})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.get('/api/tracking/summary',auth,async(req,res)=>{
+  try{
+    const rows=await readSheet('TRACKING!A2:N')
+    const data=rows.filter(r=>r[0])
+    const waiting=data.filter(r=>r[8]==='Waiting for AIS to proceed.').length
+    const completed=data.filter(r=>r[8]==='AIS processing completed').length
+    const reject=data.filter(r=>r[8]==='Reject').length
+    res.json({ok:true,total:data.length,waiting,completed,reject})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.post('/api/tracking',auth,async(req,res)=>{
+  try{
+    const{po,type,month,dm,statusCT,sentDate,note,trackingNo,statusAIS,poOtNo,completedDate,materialDoc}=req.body
+    if(!po||!trackingNo||!statusAIS) return res.status(400).json({ok:false,error:'กรุณากรอก เลข PO, Tracking No. และ Status AIS'})
+    await appendRow('TRACKING',[po,type||'',month||'',dm||'',statusCT||'',sentDate||'',note||'',trackingNo,statusAIS,poOtNo||'',completedDate||'',materialDoc||'',req.user.name,new Date().toLocaleString('th-TH')])
+    await log(req.user,'CREATE_TRACKING',`เพิ่ม Tracking ${trackingNo} PO: ${po}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.put('/api/tracking/:rowIdx',auth,async(req,res)=>{
+  try{
+    const sheetRow=parseInt(req.params.rowIdx)
+    const rows=await readSheet('TRACKING!A2:N')
+    const row=rows[sheetRow-2]
+    if(!row) return res.status(404).json({ok:false,error:'ไม่พบรายการ'})
+    const{po,type,month,dm,statusCT,sentDate,note,trackingNo,statusAIS,poOtNo,completedDate,materialDoc}=req.body
+    await updateRow('TRACKING',sheetRow,[
+      po||row[0],type??row[1],month??row[2],dm??row[3],statusCT??row[4],
+      sentDate??row[5],note??row[6],trackingNo||row[7],statusAIS||row[8],
+      poOtNo??row[9],completedDate??row[10],materialDoc??row[11],
+      req.user.name,new Date().toLocaleString('th-TH')
+    ])
+    await log(req.user,'UPDATE_TRACKING',`แก้ไข Tracking ${trackingNo||row[7]} PO: ${po||row[0]}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.delete('/api/tracking/:rowIdx',auth,async(req,res)=>{
+  try{
+    const sheetRow=parseInt(req.params.rowIdx)
+    const rows=await readSheet('TRACKING!A2:N')
+    const row=rows[sheetRow-2]
+    if(!row) return res.status(404).json({ok:false,error:'ไม่พบรายการ'})
+    await deleteRow('TRACKING',sheetRow)
+    await log(req.user,'DELETE_TRACKING',`ลบ Tracking ${row[7]} PO: ${row[0]}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+
 // LOGS
 app.get('/api/logs',auth,async(req,res)=>{
   try{
