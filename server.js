@@ -610,22 +610,29 @@ app.post('/api/tracking/bulk',auth,async(req,res)=>{
     const existing=await readSheet('TRACKING!A2:N')
     const existingSet=new Set(existing.filter(r=>r[7]).map(r=>r[7].trim()))
     const now=new Date().toLocaleString('th-TH')
-    let added=0,skipped=0
+    let skipped=0
+    const newRows=[]
     for(const r of rows){
       const trackingNo=String(r.trackingNo||'').trim()
       if(!r.po||!trackingNo){skipped++;continue}
       if(existingSet.has(trackingNo)){skipped++;continue}
-      await appendRow('TRACKING',[
+      newRows.push([
         r.po,r.type||'',r.month||'',r.dm||'',r.statusCT||'',
         r.sentDate||'',r.note||'',trackingNo,r.statusAIS||'',
         r.poOtNo||'',r.completedDate||'',r.materialDoc||'',
         req.user.name,now
       ])
       existingSet.add(trackingNo)
-      added++
     }
-    await log(req.user,'TRACKING_BULK',`Import Tracking: เพิ่ม ${added} ข้าม ${skipped} รายการ`)
-    res.json({ok:true,added,skipped})
+    if(newRows.length){
+      await google.sheets({version:'v4',auth:ga()}).spreadsheets.values.append({
+        spreadsheetId:SHEET_ID,range:'TRACKING!A1',
+        valueInputOption:'USER_ENTERED',
+        requestBody:{values:newRows}
+      })
+    }
+    await log(req.user,'TRACKING_BULK',`Import Tracking: เพิ่ม ${newRows.length} ข้าม ${skipped} รายการ`)
+    res.json({ok:true,added:newRows.length,skipped})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
