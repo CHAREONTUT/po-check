@@ -613,23 +613,40 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
       </div>
 
       <!-- Table -->
-      <div class="card"><div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th style="padding-left:14px">เลข PO</th>
-            <th>ประเภท</th>
-            <th>MM/YYYY</th>
-            <th>Department Manager</th>
-            <th>Tracking No.</th>
-            <th>Status AIS</th>
-            <th>วันที่ส่ง</th>
-            <th>วันที่ Completed</th>
-            <th>Note</th>
-            <th>จัดการ</th>
-          </tr></thead>
-          <tbody id="tracking-tbody"></tbody>
-        </table>
-      </div></div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table style="min-width:1400px;border-collapse:collapse;font-size:12.5px">
+            <colgroup>
+              <col style="width:120px"><col style="width:72px"><col style="width:90px">
+              <col style="width:170px"><col style="width:90px"><col style="width:90px">
+              <col style="width:180px"><col style="width:190px"><col style="width:150px">
+              <col style="width:105px"><col style="width:105px"><col style="width:190px">
+              <col style="width:76px">
+            </colgroup>
+            <thead>
+              <tr style="background:#1E3A5F;color:#fff;font-size:11.5px;letter-spacing:.02em">
+                <th style="padding:9px 10px;text-align:left;font-weight:700;white-space:nowrap;border-right:1px solid rgba(255,255,255,.12)">เลข PO</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">ประเภท</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">MM/YYYY</th>
+                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Department Manager</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Status CT</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">วันที่ส่ง</th>
+                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Note</th>
+                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Tracking No.</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Status AIS</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">PO_OT No.</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">วันที่ completed</th>
+                <th style="padding:9px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.12)">Material Document</th>
+                <th style="padding:9px 8px;text-align:center;font-weight:700">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="tracking-tbody"></tbody>
+          </table>
+        </div>
+        <div id="tracking-footer" style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center">
+          <span id="tracking-count"></span>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -1869,6 +1886,12 @@ async function loadTracking(){
   renderTracking()
 }
 
+const TR_ROW_STYLE={
+  'AIS processing completed':{bg:'#F0FDF4',border:'#BBF7D0',dot:'#16A34A'},
+  'Waiting for AIS to proceed.':{bg:'#FFFBEB',border:'#FDE68A',dot:'#D97706'},
+  'Reject':{bg:'#FFF1F2',border:'#FECDD3',dot:'#E11D48'}
+}
+
 function renderTracking(){
   const fStatus=document.getElementById('tr-f-status')?.value||''
   const fType=document.getElementById('tr-f-type')?.value||''
@@ -1876,35 +1899,49 @@ function renderTracking(){
   let rows=C_TRACKING.filter(r=>{
     if(fStatus&&r.statusAIS!==fStatus) return false
     if(fType&&r.type!==fType) return false
-    if(fSearch&&!r.po.toLowerCase().includes(fSearch)&&!r.trackingNo.toLowerCase().includes(fSearch)&&!r.dm.toLowerCase().includes(fSearch)&&!r.note.toLowerCase().includes(fSearch)) return false
+    if(fSearch&&![r.po,r.trackingNo,r.dm,r.note,r.month,r.poOtNo,r.materialDoc].some(v=>v.toLowerCase().includes(fSearch))) return false
     return true
   })
   const tbody=document.getElementById('tracking-tbody')
+  const countEl=document.getElementById('tracking-count')
   if(!tbody) return
+  if(countEl) countEl.textContent=`แสดง ${rows.length} รายการ จากทั้งหมด ${C_TRACKING.length} รายการ`
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">ไม่พบรายการ</td></tr>'
+    tbody.innerHTML='<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--muted)">ไม่พบรายการ</td></tr>'
     return
   }
-  tbody.innerHTML=rows.map(function(r){
-    const st=AIS_STATUS[r.statusAIS]||{label:r.statusAIS,cls:'t-amber',icon:'❓'}
-    const noteShort=r.note.length>40?r.note.substring(0,40)+'...':r.note
-    return'<tr>'+
-      '<td style="padding-left:14px;font-weight:600;color:var(--blue)">'+esc(r.po)+'</td>'+
-      '<td><span class="tag" style="background:#EFF6FF;color:#1D4ED8">'+esc(r.type)+'</span></td>'+
-      '<td style="font-size:12px;color:var(--muted)">'+esc(r.month)+'</td>'+
-      '<td style="font-size:12px">'+esc(r.dm)+'</td>'+
-      '<td style="font-size:11px;font-family:monospace;color:var(--navy)">'+esc(r.trackingNo)+'</td>'+
-      '<td><span class="tag '+st.cls+'">'+st.icon+' '+st.label+'</span></td>'+
-      '<td style="font-size:12px;color:var(--muted)">'+esc(r.sentDate)+'</td>'+
-      '<td style="font-size:12px;color:var(--muted)">'+esc(r.completedDate)+'</td>'+
-      '<td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.note)+'">'+
-        (r.statusAIS==='Reject'?'<span style="color:var(--coral)">'+esc(noteShort)+'</span>':esc(noteShort))+
-      '</td>'+
-      '<td style="white-space:nowrap">'+
-        '<button class="btn btn-amber btn-sm" onclick="openTrackingModal('+r.idx+')">✏️</button> '+
-        '<button class="btn btn-red btn-sm" onclick="deleteTracking('+r.idx+',\''+esc(r.trackingNo)+'\')">🗑️</button>'+
-      '</td>'+
-    '</tr>'
+  const bd='1px solid #E2E8F0'
+  tbody.innerHTML=rows.map(function(r,i){
+    const st=AIS_STATUS[r.statusAIS]||{label:r.statusAIS,cls:'t-amber',icon:''}
+    const style=TR_ROW_STYLE[r.statusAIS]||{bg:i%2===0?'#fff':'#F8FAFC',border:'#E2E8F0',dot:'#94A3B8'}
+    const bg=style.bg
+    const br=style.border
+    const tdStyle=`padding:7px 10px;border-bottom:1px solid ${br};border-right:${bd};vertical-align:middle`
+    const fmtD=v=>v?v.replace(/(\d{4})-(\d{2})-(\d{2}).*/,'$3/$2/$1'):''
+    const noteShort=r.note.length>35?r.note.substring(0,35)+'…':r.note
+    return`<tr style="background:${bg}">
+      <td style="${tdStyle};font-weight:600;color:var(--navy);white-space:nowrap">${esc(r.po)}</td>
+      <td style="${tdStyle};text-align:center"><span style="background:#EFF6FF;color:#1E40AF;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px">${esc(r.type)}</span></td>
+      <td style="${tdStyle};text-align:center;color:var(--muted);white-space:nowrap">${esc(r.month)}</td>
+      <td style="${tdStyle};white-space:nowrap">${esc(r.dm)}</td>
+      <td style="${tdStyle};text-align:center"><span style="background:#D1FAE5;color:#065F46;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px">${esc(r.statusCT)||'—'}</span></td>
+      <td style="${tdStyle};text-align:center;color:var(--muted);white-space:nowrap;font-size:12px">${fmtD(r.sentDate)}</td>
+      <td style="${tdStyle};max-width:180px" title="${esc(r.note)}"><span style="color:${r.statusAIS==='Reject'?'#BE123C':'inherit'}">${esc(noteShort)}</span></td>
+      <td style="${tdStyle};font-family:monospace;font-size:11.5px;white-space:nowrap;color:#1E3A5F">${esc(r.trackingNo)}</td>
+      <td style="${tdStyle};text-align:center;white-space:nowrap">
+        <span style="display:inline-flex;align-items:center;gap:5px;background:${bg};border:1.5px solid ${br};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${style.dot}">
+          <span style="width:6px;height:6px;border-radius:50%;background:${style.dot};flex-shrink:0"></span>
+          ${st.label}
+        </span>
+      </td>
+      <td style="${tdStyle};text-align:center;font-size:12px;color:var(--muted)">${esc(r.poOtNo)||'—'}</td>
+      <td style="${tdStyle};text-align:center;color:var(--muted);white-space:nowrap;font-size:12px">${fmtD(r.completedDate)||'—'}</td>
+      <td style="${tdStyle};font-size:11.5px;color:var(--muted);max-width:180px" title="${esc(r.materialDoc)}">${esc(r.materialDoc)||'—'}</td>
+      <td style="padding:7px 8px;border-bottom:1px solid ${br};text-align:center;white-space:nowrap">
+        <button class="btn btn-amber btn-sm" onclick="openTrackingModal(${r.idx})" title="แก้ไข">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="deleteTracking(${r.idx},'${esc(r.trackingNo)}')" title="ลบ">🗑️</button>
+      </td>
+    </tr>`
   }).join('')
 }
 
