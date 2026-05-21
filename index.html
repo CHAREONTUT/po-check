@@ -555,6 +555,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
         <div><div class="page-title">📦 ระบบตรวจสอบ Tracking No.</div><div class="page-sub">ติดตามสถานะการส่งเอกสาร PO / OT / SES ไปยัง AIS</div></div>
         <div class="topbar-right">
           <button class="btn btn-ghost" onclick="loadTracking()">🔄 รีเฟรช</button>
+          <button class="btn btn-ghost" onclick="openTrackingImport()">📂 Import Excel</button>
           <button class="btn btn-green" onclick="exportTracking()">📥 Export Excel</button>
           <button class="btn btn-primary" onclick="openTrackingModal()">➕ เพิ่มรายการ</button>
         </div>
@@ -722,6 +723,37 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-primary" onclick="saveEditEmployee()">💾 บันทึก</button>
       <button class="btn btn-ghost" onclick="closeM('m-emp')">ยกเลิก</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODAL: Tracking Import -->
+<div class="mbg" id="m-tracking-import"><div class="modal" style="max-width:680px">
+  <div class="modal-hdr"><div class="modal-title">📂 Import Tracking No. จาก Excel</div><button class="modal-x" onclick="closeM('m-tracking-import')">✕</button></div>
+  <div class="modal-body">
+    <div style="background:#EFF6FF;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1D4ED8;line-height:1.8">
+      📌 รองรับไฟล์จาก <strong>ระบบตรวจสอบ Tracking No.</strong> โดยตรง<br>
+      Header ที่ต้องมี: <strong>เลข PO | Tracking No. | Status AIS</strong><br>
+      <span style="color:var(--muted);font-size:12px">• Tracking No. ที่มีในระบบอยู่แล้วจะถูกข้ามโดยอัตโนมัติ</span>
+    </div>
+    <div class="upload-zone" onclick="document.getElementById('tr-import-file').click()" id="tr-import-zone">
+      <input type="file" id="tr-import-file" accept=".xlsx,.xls" onchange="handleTrackingImport(event)" style="display:none">
+      <div class="upload-icon">📂</div>
+      <div class="upload-hint">คลิกหรือลากไฟล์ Excel มาวางที่นี่<br><strong>.xlsx / .xls</strong></div>
+    </div>
+    <div id="tr-import-preview" style="display:none;margin-top:16px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="tr-import-preview-title"></div>
+      <div class="tbl-wrap" style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+        <table>
+          <thead><tr><th>เลข PO</th><th>ประเภท</th><th>MM/YYYY</th><th>Tracking No.</th><th>Status AIS</th><th>Note</th></tr></thead>
+          <tbody id="tr-import-tbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px;align-items:center">
+        <button class="btn btn-primary" id="btn-tr-import" onclick="submitTrackingImport()">📤 นำเข้าข้อมูล</button>
+        <button class="btn btn-ghost" onclick="resetTrackingImport()">🔄 เลือกไฟล์ใหม่</button>
+        <div id="tr-import-result" style="font-size:13px"></div>
+      </div>
     </div>
   </div>
 </div></div>
@@ -1994,6 +2026,105 @@ function exportTracking(){
     XLSX.writeFile(wb,'tracking_export_'+new Date().toISOString().slice(0,10)+'.xlsx')
     toast('Export สำเร็จ','success')
   })
+}
+
+// ── TRACKING IMPORT ───────────────────────────────────────────
+let TR_IMPORT_DATA=[]
+
+function openTrackingImport(){
+  resetTrackingImport()
+  document.getElementById('m-tracking-import').classList.add('show')
+}
+function resetTrackingImport(){
+  TR_IMPORT_DATA=[]
+  document.getElementById('tr-import-file').value=''
+  document.getElementById('tr-import-preview').style.display='none'
+  document.getElementById('tr-import-result').textContent=''
+  document.getElementById('tr-import-zone').style.display='block'
+}
+
+function handleTrackingImport(event){
+  const file=event.target.files[0]
+  if(!file) return
+  loadXLSX(function(){
+    const reader=new FileReader()
+    reader.onload=function(e){
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true})
+      // หา sheet ที่มีชื่อว่า "ระบบตรวจสอบ Tracking No." หรือ sheet แรก
+      const sheetName=wb.SheetNames.find(n=>n.includes('Tracking'))||wb.SheetNames[0]
+      const ws=wb.Sheets[sheetName]
+      const raw=XLSX.utils.sheet_to_json(ws,{defval:''})
+      parseTrackingImport(raw)
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+
+function fmtDate(v){
+  if(!v) return ''
+  if(v instanceof Date){
+    const y=v.getFullYear(),m=String(v.getMonth()+1).padStart(2,'0'),d=String(v.getDate()).padStart(2,'0')
+    return`${y}-${m}-${d}`
+  }
+  return String(v).trim()
+}
+
+function parseTrackingImport(raw){
+  // map header ทั้งชื่อไทยและชื่อย่อ
+  const get=(row,keys)=>{for(const k of keys){if(row[k]!==undefined&&row[k]!=='') return String(row[k]).trim()} return''}
+  TR_IMPORT_DATA=raw.map(row=>({
+    po:        get(row,['เลข PO','PO','po']),
+    type:      get(row,['ประเภท','type','Type']),
+    month:     get(row,['MM/YYYY','month','Month']),
+    dm:        get(row,['Department Manager','DM','dm']),
+    statusCT:  get(row,['Status CT','StatusCT','status_ct'])||'ส่งแล้ว',
+    sentDate:  fmtDate(row['วันที่ส่ง']||row['sent_date']||''),
+    note:      get(row,['Note','note','หมายเหตุ']),
+    trackingNo:get(row,['Tracking No.','TrackingNo','tracking_no','Tracking No']),
+    statusAIS: get(row,['Status AIS','StatusAIS','status_ais']),
+    poOtNo:    get(row,['PO_OT No.','PO_OT No','poOtNo','']),
+    completedDate: fmtDate(row['วันที่ completed']||row['completed_date']||''),
+    materialDoc:   get(row,[' Material Document (Acceptance No.) ','Material Document','materialDoc'])
+  })).filter(r=>r.po&&r.trackingNo)
+
+  const tbody=document.getElementById('tr-import-tbody')
+  tbody.innerHTML=TR_IMPORT_DATA.slice(0,20).map(r=>{
+    const st=AIS_STATUS[r.statusAIS]||{label:r.statusAIS,cls:'t-amber',icon:''}
+    const noteShort=r.note.length>30?r.note.substring(0,30)+'...':r.note
+    return`<tr>
+      <td>${esc(r.po)}</td>
+      <td><span class="tag" style="background:#EFF6FF;color:#1D4ED8">${esc(r.type)}</span></td>
+      <td style="font-size:12px">${esc(r.month)}</td>
+      <td style="font-size:11px;font-family:monospace">${esc(r.trackingNo)}</td>
+      <td><span class="tag ${st.cls}">${st.icon} ${st.label}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${esc(noteShort)}</td>
+    </tr>`
+  }).join('')
+
+  const more=TR_IMPORT_DATA.length>20?`<tr><td colspan="6" style="text-align:center;color:var(--muted);font-size:12px;padding:8px">...และอีก ${TR_IMPORT_DATA.length-20} รายการ</td></tr>`:''
+  tbody.innerHTML+=more
+
+  document.getElementById('tr-import-preview-title').textContent=`พบข้อมูล ${TR_IMPORT_DATA.length} รายการ (แสดงตัวอย่าง 20 แถวแรก)`
+  document.getElementById('tr-import-preview').style.display='block'
+  document.getElementById('tr-import-zone').style.display='none'
+}
+
+async function submitTrackingImport(){
+  if(!TR_IMPORT_DATA.length){toast('ไม่มีข้อมูล','error');return}
+  const btn=document.getElementById('btn-tr-import')
+  const result=document.getElementById('tr-import-result')
+  btn.disabled=true;btn.textContent='กำลังนำเข้า...'
+  result.textContent=''
+  const r=await api('POST','/api/tracking/bulk',{rows:TR_IMPORT_DATA})
+  btn.disabled=false;btn.textContent='📤 นำเข้าข้อมูล'
+  if(r.ok){
+    result.innerHTML=`<span style="color:var(--green);font-weight:600">✅ นำเข้าสำเร็จ เพิ่ม ${r.added} รายการ${r.skipped?` (ข้าม ${r.skipped} ซ้ำ)`:''}</span>`
+    toast(`นำเข้าสำเร็จ ${r.added} รายการ ✅`,'success')
+    loadTracking()
+  }else{
+    result.innerHTML=`<span style="color:var(--coral)">${esc(r.error||'เกิดข้อผิดพลาด')}</span>`
+    toast(r.error||'เกิดข้อผิดพลาด','error')
+  }
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}

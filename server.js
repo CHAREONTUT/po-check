@@ -603,6 +603,31 @@ app.delete('/api/tracking/:rowIdx',auth,async(req,res)=>{
     res.json({ok:true})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
+app.post('/api/tracking/bulk',auth,async(req,res)=>{
+  try{
+    const{rows}=req.body
+    if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
+    const existing=await readSheet('TRACKING!A2:N')
+    const existingSet=new Set(existing.filter(r=>r[7]).map(r=>r[7].trim()))
+    const now=new Date().toLocaleString('th-TH')
+    let added=0,skipped=0
+    for(const r of rows){
+      const trackingNo=String(r.trackingNo||'').trim()
+      if(!r.po||!trackingNo){skipped++;continue}
+      if(existingSet.has(trackingNo)){skipped++;continue}
+      await appendRow('TRACKING',[
+        r.po,r.type||'',r.month||'',r.dm||'',r.statusCT||'',
+        r.sentDate||'',r.note||'',trackingNo,r.statusAIS||'',
+        r.poOtNo||'',r.completedDate||'',r.materialDoc||'',
+        req.user.name,now
+      ])
+      existingSet.add(trackingNo)
+      added++
+    }
+    await log(req.user,'TRACKING_BULK',`Import Tracking: เพิ่ม ${added} ข้าม ${skipped} รายการ`)
+    res.json({ok:true,added,skipped})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
 
 // LOGS
 app.get('/api/logs',auth,async(req,res)=>{
