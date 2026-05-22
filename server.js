@@ -17,7 +17,6 @@ const USERS = [
   { name: process.env.USER1_NAME || 'ปอ',       email: process.env.USER1_EMAIL || 'po@co.com',                password: process.env.USER1_PASS || 'po1234' },
   { name: process.env.USER2_NAME || 'ผู้ใช้ 2',  email: process.env.USER2_EMAIL || 'u2@co.com',               password: process.env.USER2_PASS || 'user1234' },
   { name: process.env.USER3_NAME || 'ผู้ใช้ 3',  email: process.env.USER3_EMAIL || 'u3@co.com',               password: process.env.USER3_PASS || 'user1234' },
-  { name: process.env.USER4_NAME || 'พี่เก่ง',   email: process.env.USER4_EMAIL || 'k.somboon.siri@gmail.com', password: process.env.USER4_PASS || '2288@k' },
 ]
 
 // Parse dates in D/M/YYYY, DD/MM/YYYY, or YYYY-MM-DD format
