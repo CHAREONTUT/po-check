@@ -161,9 +161,9 @@ app.put('/api/po/:poNum',auth,async(req,res)=>{
     const rows=await readSheet('PO_MASTER!A2:F')
     const i=rows.findIndex(r=>r[0]===req.params.poNum)
     if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบ PO'})
-    const{client,startDate,endDate}=req.body
+    const{client}=req.body
     const orig=rows[i]
-    await updateRow('PO_MASTER',i+2,[req.params.poNum,client||orig[1],startDate||orig[2],endDate||orig[3],req.user.name,new Date().toLocaleString('th-TH')])
+    await updateRow('PO_MASTER',i+2,[req.params.poNum,client||orig[1],orig[2],orig[3],req.user.name,new Date().toLocaleString('th-TH')])
     await log(req.user,'UPDATE_PO',`แก้ไข PO ${req.params.poNum}`)
     res.json({ok:true})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
@@ -199,8 +199,8 @@ app.put('/api/employees/:rowIdx',auth,async(req,res)=>{
     const rows=await readSheet('PO_EMPLOYEES!A2:F')
     const row=rows[sheetRow-2]
     if(!row) return res.status(404).json({ok:false,error:'ไม่พบรายการ'})
-    const{name,start,end}=req.body
-    await updateRow('PO_EMPLOYEES',sheetRow,[row[0],name||row[1],start||row[2],end||row[3],req.user.name,new Date().toLocaleString('th-TH')])
+    const{name}=req.body
+    await updateRow('PO_EMPLOYEES',sheetRow,[row[0],name||row[1],row[2],row[3],req.user.name,new Date().toLocaleString('th-TH')])
     await log(req.user,'UPDATE_EMPLOYEE',`แก้ไขพนักงาน ${name||row[1]} ใน PO ${row[0]}`)
     res.json({ok:true})
   }catch(e){res.status(500).json({ok:false,error:e.message})}

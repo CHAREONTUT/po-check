@@ -307,8 +307,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
           <div class="fg"><label>ชื่อลูกค้า (DM) *</label><input class="fi2" id="p-dm" placeholder="บริษัท..."></div>
         </div>
         <div class="frow">
-          <div class="fg"><label>วันเริ่ม PO</label><input class="fi2" id="p-st" type="date"></div>
-          <div class="fg"><label>วันสิ้นสุด PO</label><input class="fi2" id="p-en" type="date"></div>
+          <div class="fg"><label id="lbl-p-st">วันเริ่ม PO</label><input class="fi2" id="p-st" type="date"></div>
+          <div class="fg"><label id="lbl-p-en">วันสิ้นสุด PO</label><input class="fi2" id="p-en" type="date"></div>
         </div>
         <div class="fg">
           <label>รายชื่อพนักงาน <span class="opt">(ใส่ Start/End ของแต่ละคนได้ — สูงสุด 30 รายการ)</span></label>
@@ -750,8 +750,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <input type="hidden" id="edit-emp-po">
     <div class="fg"><label>ชื่อพนักงาน *</label><input class="fi2" id="edit-emp-name" placeholder="ชื่อ นามสกุล"></div>
     <div class="frow">
-      <div class="fg"><label>วันเริ่ม</label><input class="fi2" id="edit-emp-start" type="date"></div>
-      <div class="fg"><label>วันสิ้นสุด</label><input class="fi2" id="edit-emp-end" type="date"></div>
+      <div class="fg"><label id="lbl-emp-start">วันเริ่ม</label><input class="fi2" id="edit-emp-start" type="date"></div>
+      <div class="fg"><label id="lbl-emp-end">วันสิ้นสุด</label><input class="fi2" id="edit-emp-end" type="date"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-primary" onclick="saveEditEmployee()">💾 บันทึก</button>
@@ -1319,12 +1319,20 @@ async function editPO(poNum){
   document.getElementById('p-dm').value=r.client||''
   document.getElementById('p-st').value=r.startDate||''
   document.getElementById('p-en').value=r.endDate||''
+  document.getElementById('p-st').disabled=true
+  document.getElementById('p-en').disabled=true
+  document.getElementById('lbl-p-st').innerHTML='วันเริ่ม PO <span style="color:var(--muted);font-size:11px">🔒</span>'
+  document.getElementById('lbl-p-en').innerHTML='วันสิ้นสุด PO <span style="color:var(--muted);font-size:11px">🔒</span>'
   setEmps(r.employees||[]);nav('po-form',null)
 }
 function cancelPOEdit(){
   document.getElementById('pof-title').textContent='➕ เพิ่มใบ PO ใหม่'
   document.getElementById('edit-orig').value=''
   document.getElementById('p-num').disabled=false
+  document.getElementById('p-st').disabled=false
+  document.getElementById('p-en').disabled=false
+  document.getElementById('lbl-p-st').textContent='วันเริ่ม PO'
+  document.getElementById('lbl-p-en').textContent='วันสิ้นสุด PO'
   ;['p-num','p-dm','p-st','p-en'].forEach(i=>document.getElementById(i).value='')
   initEmp();nav('po-list',null)
 }
@@ -1876,7 +1884,15 @@ function parseDate(str){
 function toast(m,t){var el=document.getElementById('toast');el.textContent=m;el.className='toast show '+(t||'');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show')},4000)}
 function spin(on){document.getElementById('spinner').style.display=on?'grid':'none'}
 function setLoad(id,on){var b=document.getElementById(id);if(!b)return;b.disabled=on;b.textContent=on?'กำลังบันทึก...':'💾 บันทึก'}
-function closeM(id){document.getElementById(id).classList.remove('show')}
+function closeM(id){
+  document.getElementById(id).classList.remove('show')
+  if(id==='m-emp'){
+    document.getElementById('edit-emp-start').disabled=false
+    document.getElementById('edit-emp-end').disabled=false
+    document.getElementById('lbl-emp-start').textContent='วันเริ่ม'
+    document.getElementById('lbl-emp-end').textContent='วันสิ้นสุด'
+  }
+}
 document.querySelectorAll('.mbg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('show')})})
 
 // ── Employee Edit ─────────────────────────────────────────────
@@ -1887,6 +1903,10 @@ function editEmployee(idx,name,start,end,poNum){
   document.getElementById('edit-emp-name').value=name
   document.getElementById('edit-emp-start').value=start||''
   document.getElementById('edit-emp-end').value=end||''
+  document.getElementById('edit-emp-start').disabled=true
+  document.getElementById('edit-emp-end').disabled=true
+  document.getElementById('lbl-emp-start').innerHTML='วันเริ่ม <span style="color:var(--muted);font-size:11px">🔒</span>'
+  document.getElementById('lbl-emp-end').innerHTML='วันสิ้นสุด <span style="color:var(--muted);font-size:11px">🔒</span>'
   document.getElementById('m-emp').classList.add('show')
 }
 async function saveEditEmployee(){
