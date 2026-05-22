@@ -397,29 +397,34 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
           </div>
           <div class="frow">
             <div class="fg">
-              <label>ชื่อพนักงาน *</label>
-              <input class="fi2" id="ot-emp-old" placeholder="ชื่อ นามสกุล">
-            </div>
-            <div class="fg">
               <label>เดือนที่เบิก *</label>
               <select class="fi2" id="ot-month-old">
                 <option value="">-- เลือกเดือน --</option>
               </select>
             </div>
-          </div>
-          <div class="frow">
-            <div class="fg">
-              <label>OT จ่ายพนักงาน (฿) *</label>
-              <input class="fi2" id="ot-pay-old" type="number" placeholder="0.00" min="0">
-            </div>
-            <div class="fg">
-              <label>OT เรียกเก็บลูกค้า (฿) *</label>
-              <input class="fi2" id="ot-bill-old" type="number" placeholder="0.00" min="0">
+            <div class="fg" style="max-width:220px">
+              <label>เลข PO_OT <span class="opt">(ไม่บังคับ)</span></label>
+              <input class="fi2" id="ot-poot-old" placeholder="OT-1234">
             </div>
           </div>
-          <div class="fg" style="max-width:320px">
-            <label>เลข PO_OT <span class="opt">(ไม่บังคับ)</span></label>
-            <input class="fi2" id="ot-poot-old" placeholder="OT-1234">
+          <div style="margin-top:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label style="font-weight:600;font-size:13px">รายชื่อพนักงาน *</label>
+              <button class="btn btn-green btn-sm" onclick="addOldEmpRow()" type="button">+ เพิ่มพนักงาน</button>
+            </div>
+            <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+              <table style="width:100%;border-collapse:collapse">
+                <thead>
+                  <tr style="background:var(--surface)">
+                    <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">ชื่อพนักงาน</th>
+                    <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">OT จ่ายพนักงาน (฿)</th>
+                    <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">OT เรียกเก็บลูกค้า (฿)</th>
+                    <th style="padding:8px 8px;width:44px;border-bottom:1px solid var(--border)"></th>
+                  </tr>
+                </thead>
+                <tbody id="ot-old-emp-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -1389,6 +1394,18 @@ function onOTPOChange(val){
     </tr>`
   }).join('')
 }
+function addOldEmpRow(){
+  const tbody=document.getElementById('ot-old-emp-tbody')
+  const tr=document.createElement('tr')
+  tr.innerHTML=`
+    <td style="padding:6px 8px"><input class="fi2 old-emp-name" placeholder="ชื่อ นามสกุล" style="font-size:13px;padding:7px 10px;width:100%"></td>
+    <td style="padding:6px 8px"><input type="number" class="fi2 old-emp-pay" placeholder="0.00" min="0" style="font-size:13px;padding:7px 10px;width:100%"></td>
+    <td style="padding:6px 8px"><input type="number" class="fi2 old-emp-bill" placeholder="0.00" min="0" style="font-size:13px;padding:7px 10px;width:100%"></td>
+    <td style="padding:6px 8px;text-align:center"><button class="btn btn-red btn-sm" onclick="this.closest('tr').remove()" type="button" title="ลบ">✕</button></td>
+  `
+  tbody.appendChild(tr)
+  tr.querySelector('.old-emp-name').focus()
+}
 function updateOldMonths(){
   const year=document.getElementById('ot-old-year').value
   const thMonths=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
@@ -1409,8 +1426,11 @@ function toggleOldPO(){
   document.getElementById('ot-old-year').style.display=isOld?'':'none'
   document.getElementById('ot-normal-section').style.display=isOld?'none':''
   document.getElementById('ot-old-section').style.display=isOld?'':'none'
-  if(isOld) updateOldMonths()
-  else{
+  if(isOld){
+    updateOldMonths()
+    const tbody=document.getElementById('ot-old-emp-tbody')
+    if(!tbody.children.length) addOldEmpRow()
+  }else{
     document.getElementById('ot-emp-section').style.display='none'
     document.getElementById('ot-no-emp').style.display='none'
   }
@@ -1418,20 +1438,31 @@ function toggleOldPO(){
 async function submitOT(){
   const isOld=document.getElementById('ot-old-ckbox').classList.contains('on')
   if(isOld){
-    const poNum=g('ot-po-old'),docDate=g('ot-dt-old'),empName=g('ot-emp-old')
-    const otMonth=g('ot-month-old'),otPay=g('ot-pay-old'),otBill=g('ot-bill-old')
-    const poOt=g('ot-poot-old')
+    const poNum=g('ot-po-old'),docDate=g('ot-dt-old')
+    const otMonth=g('ot-month-old'),poOt=g('ot-poot-old')
     const yearRemark=document.getElementById('ot-old-year').value
-    if(!poNum||!docDate||!empName||!otMonth||!otPay||!otBill){toast('กรุณากรอกข้อมูลให้ครบ','error');return}
+    if(!poNum||!docDate||!otMonth){toast('กรุณากรอก PO, วันที่ และเดือนที่เบิกให้ครบ','error');return}
+    const rows=document.querySelectorAll('#ot-old-emp-tbody tr')
+    const entries=[]
+    rows.forEach(row=>{
+      const empName=row.querySelector('.old-emp-name')?.value?.trim()||''
+      const otPay=row.querySelector('.old-emp-pay')?.value||''
+      const otBill=row.querySelector('.old-emp-bill')?.value||''
+      if(empName&&otPay&&otBill) entries.push({poNum,empName,poOt,docDate,otPay,otBill,otMonth,yearRemark})
+    })
+    if(!entries.length){toast('กรุณาเพิ่มพนักงานอย่างน้อย 1 คน และกรอกข้อมูลให้ครบ','error');return}
     setLoad('btn-ot',true)
-    const r=await api('POST','/api/ot',{poNum,empName,poOt,docDate,otPay,otBill,otMonth,yearRemark})
+    let success=0,failed=0
+    for(const entry of entries){const r=await api('POST','/api/ot',entry);if(r.ok)success++;else failed++}
     setLoad('btn-ot',false)
-    if(r.ok){
-      toast(`บันทึก OT ปี ${yearRemark} สำเร็จ ✅`,'success')
-      ;['ot-po-old','ot-dt-old','ot-emp-old','ot-pay-old','ot-bill-old','ot-poot-old'].forEach(i=>document.getElementById(i).value='')
+    if(success){
+      toast(`บันทึก OT ปี ${yearRemark} สำเร็จ ${success} รายการ${failed?` (ไม่สำเร็จ ${failed})`:''}✅`,'success')
+      ;['ot-po-old','ot-dt-old','ot-poot-old'].forEach(i=>document.getElementById(i).value='')
       document.getElementById('ot-month-old').selectedIndex=0
+      document.getElementById('ot-old-emp-tbody').innerHTML=''
+      addOldEmpRow()
       loadAll()
-    }else toast(r.error||'เกิดข้อผิดพลาด','error')
+    }else toast('เกิดข้อผิดพลาด กรุณาลองใหม่','error')
     return
   }
   const poNum=g('ot-po'),docDate=g('ot-dt'),poOt=g('ot-poot')
