@@ -1278,6 +1278,7 @@ function getEmps(){
   const a=[]
   document.querySelectorAll('[id^="ei-n-"]').forEach(inp=>{
     const n=inp.id.replace('ei-n-','')
+    if(document.getElementById(`ew-${n}`)?.dataset.existing) return
     const name=inp.value.trim()
     if(name) a.push({name,start:document.getElementById(`ei-s-${n}`)?.value||'',end:document.getElementById(`ei-e-${n}`)?.value||''})
   })
@@ -1289,9 +1290,16 @@ function setEmps(list){
   list.forEach(e=>{
     addEmp()
     const n=EMP_CNT
-    document.getElementById(`ei-n-${n}`).value=e.name||''
-    document.getElementById(`ei-s-${n}`).value=e.start||''
-    document.getElementById(`ei-e-${n}`).value=e.end||''
+    const row=document.getElementById(`ew-${n}`)
+    row.dataset.existing='1'
+    const ni=document.getElementById(`ei-n-${n}`)
+    const si=document.getElementById(`ei-s-${n}`)
+    const ei=document.getElementById(`ei-e-${n}`)
+    ni.value=e.name||''
+    si.value=toInputDate(e.start)||e.start||''
+    ei.value=toInputDate(e.end)||e.end||''
+    ni.disabled=true;si.disabled=true;ei.disabled=true
+    row.querySelector('.btn-rm').style.display='none'
   })
 }
 
@@ -2126,7 +2134,11 @@ function openTrackingModal(idx){
 
 function toInputDate(val){
   if(!val) return ''
-  if(typeof val==='string'&&val.includes('T')) return val.substring(0,10)
+  val=String(val).trim()
+  if(val.includes('T')) return val.substring(0,10)
+  if(/^\d{4}-\d{2}-\d{2}$/.test(val)) return val
+  const m=val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')
   return ''
 }
 
