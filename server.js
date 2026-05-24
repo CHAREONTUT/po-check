@@ -233,25 +233,25 @@ app.post('/api/po/bulk',auth,async(req,res)=>{
       const name=str(r['Name']??r['name']??'')
       if(name) empList.push({poNum:po,name,start:str(r['Start']??''),end:str(r['End']??'')})
     }
-    const existingPO=await readSheet('PO_MASTER!A2:F')
-    const existingEmp=await readSheet('PO_EMPLOYEES!A2:F')
+    const [existingPO,existingEmp]=await Promise.all([readSheet('PO_MASTER!A2:F'),readSheet('PO_EMPLOYEES!A2:F')])
     const now=new Date().toLocaleString('th-TH')
     const normDate=v=>String(v||'').trim().replace(/\s+/g,' ')
-    let poCreated=0,poSkipped=0,empAdded=0
+    const sheets=google.sheets({version:'v4',auth:ga()})
+    // Collect new POs → single append
+    const newPORows=[];let poCreated=0,poSkipped=0
     for(const[poNum,data] of Object.entries(poMap)){
-      const i=existingPO.findIndex(r=>String(r[0]).trim()===String(poNum).trim())
-      if(i===-1){await appendRow('PO_MASTER',[poNum,data.client,data.start,data.end,req.user.name,now]);poCreated++}
-      else poSkipped++ // PO มีอยู่แล้ว → ข้ามเลย ไม่แตะข้อมูลเดิม
+      if(existingPO.findIndex(r=>String(r[0]).trim()===String(poNum).trim())===-1){
+        newPORows.push([poNum,data.client,data.start,data.end,req.user.name,now]);poCreated++
+      }else poSkipped++
     }
+    if(newPORows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'PO_MASTER!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newPORows}})
+    // Collect new employees → single append
+    const newEmpRows=[];let empAdded=0
     for(const emp of empList){
-      const dup=existingEmp.find(r=>
-        String(r[0]).trim()===String(emp.poNum).trim()&&
-        String(r[1]).trim()===String(emp.name).trim()&&
-        normDate(r[2])===normDate(emp.start)&&
-        normDate(r[3])===normDate(emp.end)
-      )
-      if(!dup){await appendRow('PO_EMPLOYEES',[emp.poNum,emp.name,emp.start,emp.end,req.user.name,now]);empAdded++}
+      const dup=existingEmp.find(r=>String(r[0]).trim()===String(emp.poNum).trim()&&String(r[1]).trim()===String(emp.name).trim()&&normDate(r[2])===normDate(emp.start)&&normDate(r[3])===normDate(emp.end))
+      if(!dup){newEmpRows.push([emp.poNum,emp.name,emp.start,emp.end,req.user.name,now]);empAdded++}
     }
+    if(newEmpRows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'PO_EMPLOYEES!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newEmpRows}})
     // Process EAS from bulk
     const easList=[]
     for(const r of rows){
@@ -267,18 +267,21 @@ app.post('/api/po/bulk',auth,async(req,res)=>{
     if(easList.length){
       const existingEAS=await readSheet('EAS!A2:I')
       const now2=new Date().toLocaleString('th-TH')
+      const newEASRows=[];const easUpdateData=[]
       for(const eas of easList){
         const dupIdx=existingEAS.findIndex(r=>r[0]===eas.poNum&&r[1]===eas.empName&&r[2]===eas.month)
         if(dupIdx===-1){
-          await appendRow('EAS',[eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now2,eas.item])
+          newEASRows.push([eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now2,eas.item])
           existingEAS.push([eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now2,eas.item])
           easAdded++
         }else{
           const row=existingEAS[dupIdx]
-          await updateRow('EAS',dupIdx+2,[row[0],row[1],row[2],eas.easNo,'Placed',row[5]||'',req.user.name,now2,eas.item||row[8]||''])
+          easUpdateData.push({range:`EAS!A${dupIdx+2}`,values:[[row[0],row[1],row[2],eas.easNo,'Placed',row[5]||'',req.user.name,now2,eas.item||row[8]||'']]})
           easUpdated++
         }
       }
+      if(newEASRows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'EAS!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newEASRows}})
+      if(easUpdateData.length) await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SHEET_ID,requestBody:{valueInputOption:'USER_ENTERED',data:easUpdateData}})
     }
     await log(req.user,'BULK_UPLOAD',`Bulk: PO สร้าง ${poCreated} ข้าม ${poSkipped} พนักงานเพิ่ม ${empAdded} EAS เพิ่ม ${easAdded} อัพเดต ${easUpdated}`)
     res.json({ok:true,poCreated,poSkipped,empAdded,easAdded,easUpdated})
@@ -307,20 +310,23 @@ app.post('/api/eas/bulk',auth,async(req,res)=>{
     if(!easList.length) return res.status(400).json({ok:false,error:'ไม่พบข้อมูล EAS ที่ครบถ้วน (ต้องมี PO No., Name, EAS No, EAS Month)'})
     const existingEAS=await readSheet('EAS!A2:I')
     const now=new Date().toLocaleString('th-TH')
+    const sheets=google.sheets({version:'v4',auth:ga()})
     let easAdded=0,easUpdated=0
+    const newEASRows=[];const easUpdateData=[]
     for(const eas of easList){
       const dupIdx=existingEAS.findIndex(r=>r[0]===eas.poNum&&r[1]===eas.empName&&r[2]===eas.month)
       if(dupIdx===-1){
-        await appendRow('EAS',[eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now,eas.item])
+        newEASRows.push([eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now,eas.item])
         existingEAS.push([eas.poNum,eas.empName,eas.month,eas.easNo,'Placed','',req.user.name,now,eas.item])
         easAdded++
       }else{
         const row=existingEAS[dupIdx]
-        await updateRow('EAS',dupIdx+2,[row[0],row[1],row[2],eas.easNo,'Placed',row[5]||'',req.user.name,now,eas.item||row[8]||''])
-        existingEAS[dupIdx][3]=eas.easNo
+        easUpdateData.push({range:`EAS!A${dupIdx+2}`,values:[[row[0],row[1],row[2],eas.easNo,'Placed',row[5]||'',req.user.name,now,eas.item||row[8]||'']]})
         easUpdated++
       }
     }
+    if(newEASRows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'EAS!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newEASRows}})
+    if(easUpdateData.length) await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SHEET_ID,requestBody:{valueInputOption:'USER_ENTERED',data:easUpdateData}})
     await log(req.user,'EAS_BULK',`EAS Bulk: เพิ่ม ${easAdded} อัพเดต ${easUpdated} รายการ`)
     res.json({ok:true,easAdded,easUpdated})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
