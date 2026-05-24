@@ -129,10 +129,17 @@ app.get('/api/po',auth,async(req,res)=>{
 })
 app.get('/api/po/expired/list',auth,async(req,res)=>{
   try{
-    const rows=await readSheet('PO_MASTER!A2:F')
-    const today=new Date()
-    const expired=rows.map((r,i)=>({rowIndex:i+2,po:r[0],client:r[1],startDate:r[2],endDate:r[3],daysExpired:Math.ceil((today-parseDate(r[3]))/86400000)}))
-      .filter(a=>a.endDate&&a.daysExpired>0).sort((a,b)=>a.daysExpired-b.daysExpired)
+    const [poRows,empRows]=await Promise.all([readSheet('PO_MASTER!A2:F'),readSheet('PO_EMPLOYEES!A2:F')])
+    const today=new Date();today.setHours(0,0,0,0)
+    const expired=poRows
+      .map((r,i)=>({rowIndex:i+2,po:r[0],client:r[1],startDate:r[2],endDate:r[3],daysExpired:Math.ceil((today-parseDate(r[3]))/86400000)}))
+      .filter(a=>{
+        if(!a.endDate||a.daysExpired<=0) return false
+        // ถ้ามีพนักงานคนไหนใน PO นี้ที่ยังไม่หมดสัญญา → ไม่นับว่า PO หมด
+        const hasActiveEmp=empRows.some(e=>e[0]===a.po&&e[3]&&parseDate(e[3])>=today)
+        return !hasActiveEmp
+      })
+      .sort((a,b)=>a.daysExpired-b.daysExpired)
     res.json({ok:true,data:expired})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
