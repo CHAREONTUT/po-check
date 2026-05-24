@@ -230,28 +230,47 @@ app.post('/api/po/bulk',auth,async(req,res)=>{
     const{rows}=req.body
     if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
     const str=v=>(v===null||v===undefined)?'':String(v).trim()
-    const poMap={};let lastPO='',lastDM='',lastPOStart='',lastPOEnd='';const empList=[]
+    const poMap={};let lastPO='',lastDM='';const empList=[]
     for(const r of rows){
       const rawPO=str(r['PO No.']??r['PO_No']??r['PONo']??r['po no.']??'')
       const po=rawPO||lastPO;if(!po) continue
-      if(rawPO){lastPO=rawPO;lastDM=str(r['DM']??'');lastPOStart=str(r['Start']??'');lastPOEnd=str(r['End']??'')}
-      if(!poMap[po]) poMap[po]={client:lastDM,start:lastPOStart,end:lastPOEnd}
+      if(rawPO){lastPO=rawPO;lastDM=str(r['DM']??'')}
+      if(!poMap[po]) poMap[po]={client:lastDM,start:'',end:''}
       if(r['DM']&&str(r['DM'])) poMap[po].client=str(r['DM'])
       const name=str(r['Name']??r['name']??'')
-      if(name) empList.push({poNum:po,name,start:str(r['Start']??''),end:str(r['End']??'')})
+      const rowStart=str(r['Start']??''),rowEnd=str(r['End']??'')
+      // PO start = วันแรกสุดของทุกแถว, PO end = วันสุดท้ายของทุกแถว
+      if(rowStart){
+        const d=parseDate(rowStart)
+        if(d&&(!poMap[po].start||d<parseDate(poMap[po].start))) poMap[po].start=rowStart
+      }
+      if(rowEnd){
+        const d=parseDate(rowEnd)
+        if(d&&(!poMap[po].end||d>parseDate(poMap[po].end))) poMap[po].end=rowEnd
+      }
+      if(name) empList.push({poNum:po,name,start:rowStart,end:rowEnd})
     }
     const [existingPO,existingEmp]=await Promise.all([readSheet('PO_MASTER!A2:F'),readSheet('PO_EMPLOYEES!A2:F')])
     const now=new Date().toLocaleString('th-TH')
     const normDate=v=>String(v||'').trim().replace(/\s+/g,' ')
     const sheets=google.sheets({version:'v4',auth:ga()})
-    // Collect new POs → single append
-    const newPORows=[];let poCreated=0,poSkipped=0
+    // Collect new POs → single append; existing POs → extend endDate if newer
+    const newPORows=[];const poUpdateData=[];let poCreated=0,poSkipped=0,poExtended=0
     for(const[poNum,data] of Object.entries(poMap)){
-      if(existingPO.findIndex(r=>String(r[0]).trim()===String(poNum).trim())===-1){
+      const i=existingPO.findIndex(r=>String(r[0]).trim()===String(poNum).trim())
+      if(i===-1){
         newPORows.push([poNum,data.client,data.start,data.end,req.user.name,now]);poCreated++
-      }else poSkipped++
+      }else{
+        // ถ้า endDate ใหม่ยาวกว่าเดิม → อัพเดท
+        const oldEnd=parseDate(existingPO[i][3]),newEnd=parseDate(data.end)
+        if(newEnd&&(!oldEnd||newEnd>oldEnd)){
+          poUpdateData.push({range:`PO_MASTER!A${i+2}`,values:[[existingPO[i][0],existingPO[i][1],existingPO[i][2],data.end,req.user.name,now]]})
+          poExtended++
+        }else poSkipped++
+      }
     }
     if(newPORows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'PO_MASTER!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newPORows}})
+    if(poUpdateData.length) await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SHEET_ID,requestBody:{valueInputOption:'USER_ENTERED',data:poUpdateData}})
     // Collect new employees → single append
     const newEmpRows=[];let empAdded=0
     for(const emp of empList){
@@ -290,7 +309,7 @@ app.post('/api/po/bulk',auth,async(req,res)=>{
       if(newEASRows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'EAS!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newEASRows}})
       if(easUpdateData.length) await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SHEET_ID,requestBody:{valueInputOption:'USER_ENTERED',data:easUpdateData}})
     }
-    await log(req.user,'BULK_UPLOAD',`Bulk: PO สร้าง ${poCreated} ข้าม ${poSkipped} พนักงานเพิ่ม ${empAdded} EAS เพิ่ม ${easAdded} อัพเดต ${easUpdated}`)
+    await log(req.user,'BULK_UPLOAD',`Bulk: PO สร้าง ${poCreated} ขยายวันสิ้นสุด ${poExtended} ข้าม ${poSkipped} พนักงานเพิ่ม ${empAdded} EAS เพิ่ม ${easAdded} อัพเดต ${easUpdated}`)
     res.json({ok:true,poCreated,poSkipped,empAdded,easAdded,easUpdated})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
