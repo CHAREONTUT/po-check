@@ -4,38 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Acceptance and Additional Charge Review</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Prompt:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--blue:#3B82F6;--indigo:#6366F1;--amber:#F59E0B;--teal:#14B8A6;--coral:#F43F5E;--green:#10B981;--navy:#1E3A5F;--bg:#F0F4FF;--card:#fff;--text:#1E293B;--muted:#64748B;--border:#E2E8F0}
-body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1E3A5F,#3B82F6 50%,#6366F1);padding:20px}
+:root{--blue:#C2570F;--indigo:#F0923D;--amber:#F59E0B;--teal:#14B8A6;--coral:#F43F5E;--green:#10B981;--navy:#3D2414;--bg:#FBF3E7;--card:#fff;--text:#3A2A1C;--muted:#8C7862;--border:#EFE0C8}
+body{font-family:'Fira Sans','Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3D2414,#C2570F 50%,#F0923D);padding:20px}
 .login-card{background:#fff;border-radius:24px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.25)}
-.login-logo{font-family:'Prompt',sans-serif;font-size:30px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:6px}
+.login-logo{font-family:'DM Serif Display','Sarabun',serif;font-size:30px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:6px}
 .login-logo span{color:var(--blue)}
 .login-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:32px}
 .login-err{background:#FFF1F2;border:1px solid #FECDD3;border-radius:10px;padding:10px 14px;font-size:13px;color:#BE123C;margin-bottom:16px;display:none}
 .login-err.show{display:block}
 .fl{margin-bottom:18px}
 .fl label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px}
-.fi{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:#F8FAFC;outline:none;transition:border-color .2s}
+.fi{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-family:'Fira Sans','Sarabun',sans-serif;font-size:14px;color:var(--text);background:#FDF6EC;outline:none;transition:border-color .2s}
 .fi:focus{border-color:var(--blue);background:#fff}
-.login-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(90deg,#3B82F6,#6366F1);color:#fff;font-family:'Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.login-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(90deg,#C2570F,#F0923D);color:#fff;font-family:'Fira Sans','Sarabun',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
 .login-btn:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
 .login-btn:disabled{opacity:.5;cursor:not-allowed}
 .app{display:none}.app.show{display:flex;min-height:100vh}
-.sidebar{width:220px;background:linear-gradient(160deg,#1E3A5F,#0F2444);padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;transition:transform .3s}
-.logo{font-family:'Prompt',sans-serif;font-size:18px;font-weight:700;color:#fff;padding:0 12px 18px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px}
-.logo span{color:#60A5FA}
+.sidebar{width:220px;background:linear-gradient(160deg,#3D2414,#241209);padding:24px 16px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;transition:transform .3s}
+.logo{font-family:'DM Serif Display','Sarabun',serif;font-size:18px;font-weight:700;color:#fff;padding:0 12px 18px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px}
+.logo span{color:#F2B77E}
 .user-box{padding:10px 12px;background:rgba(255,255,255,.08);border-radius:10px;margin-bottom:6px}
 .user-name{font-size:13px;font-weight:600;color:#fff}
 .user-email{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;word-break:break-all}
 .nav-sec{font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:12px 14px 4px;text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'Sarabun',sans-serif}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'Fira Sans','Sarabun',sans-serif}
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.nav-item.active{background:linear-gradient(90deg,#3B82F6,#6366F1);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.4)}
+.nav-item.active{background:linear-gradient(90deg,#C2570F,#F0923D);color:#fff;box-shadow:0 4px 12px rgba(194,87,15,.4)}
 .nav-badge{margin-left:auto;background:#F43F5E;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
-.logout-btn{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;border:none;background:none;width:100%;font-family:'Sarabun',sans-serif;transition:all .2s}
+.logout-btn{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;border:none;background:none;width:100%;font-family:'Fira Sans','Sarabun',sans-serif;transition:all .2s}
 .logout-btn:hover{background:rgba(239,68,68,.15);color:#FCA5A5}
 .main{flex:1;padding:28px 32px;margin-left:220px;min-height:100vh}
 .hamburger{display:none;position:fixed;top:12px;left:12px;z-index:300;background:var(--navy);border:none;border-radius:8px;padding:8px 10px;cursor:pointer;flex-direction:column;gap:4px}
@@ -43,12 +43,12 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:190}
 .page{display:none}.page.active{display:block}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap}
-.page-title{font-family:'Prompt',sans-serif;font-size:20px;font-weight:700}
+.page-title{font-family:'DM Serif Display','Sarabun',serif;font-size:20px;font-weight:700}
 .page-sub{font-size:12px;color:var(--muted);margin-top:2px}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Sarabun',sans-serif;transition:all .2s;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Fira Sans','Sarabun',sans-serif;transition:all .2s;white-space:nowrap}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-primary{background:linear-gradient(90deg,#3B82F6,#6366F1);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.25)}
+.btn-primary{background:linear-gradient(90deg,#C2570F,#F0923D);color:#fff;box-shadow:0 4px 12px rgba(194,87,15,.25)}
 .btn-primary:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
 .btn-green{background:linear-gradient(90deg,#10B981,#14B8A6);color:#fff}
 .btn-green:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
@@ -56,24 +56,24 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .btn-amber:hover:not(:disabled){background:#FDE68A}
 .btn-red{background:#FFF1F2;color:#BE123C}
 .btn-red:hover:not(:disabled){background:#FFE4E6}
-.btn-ghost{background:#F1F5F9;color:var(--text)}
-.btn-ghost:hover:not(:disabled){background:#E2E8F0}
+.btn-ghost{background:#F5E9D6;color:var(--text)}
+.btn-ghost:hover:not(:disabled){background:#EFE0C8}
 .btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#F43F5E);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
 .stat-card{background:var(--card);border-radius:16px;padding:18px 18px 14px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer}
 .stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.sc-blue::before{background:linear-gradient(90deg,#3B82F6,#60A5FA)}
+.sc-blue::before{background:linear-gradient(90deg,#C2570F,#F2B77E)}
 .sc-amber::before{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
 .sc-teal::before{background:linear-gradient(90deg,#14B8A6,#5EEAD4)}
 .sc-coral::before{background:linear-gradient(90deg,#F43F5E,#FB7185)}
 .stat-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:17px;margin-bottom:10px}
-.sc-blue .stat-icon{background:#EFF6FF}
+.sc-blue .stat-icon{background:#FDECDC}
 .sc-amber .stat-icon{background:#FFFBEB}
 .sc-teal .stat-icon{background:#F0FDFA}
 .sc-coral .stat-icon{background:#FFF1F2}
-.stat-num{font-family:'Prompt',sans-serif;font-size:24px;font-weight:700}
+.stat-num{font-family:'DM Serif Display','Sarabun',serif;font-size:24px;font-weight:700}
 .stat-label{font-size:11px;color:var(--muted);margin-top:2px}
 .stat-hint{font-size:10px;color:var(--blue);margin-top:6px;font-weight:600}
 .stat-badge{position:absolute;top:14px;right:14px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
@@ -86,7 +86,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .fg{margin-bottom:14px}
 .fg label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px}
-.fi2{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:#F8FAFC;outline:none;transition:border-color .2s}
+.fi2{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);font-family:'Fira Sans','Sarabun',sans-serif;font-size:14px;color:var(--text);background:#FDF6EC;outline:none;transition:border-color .2s}
 .fi2:focus{border-color:var(--blue);background:#fff}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .opt{color:var(--muted);font-weight:400;font-size:11px}
@@ -94,28 +94,28 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .emp-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 .emp-row{display:grid;grid-template-columns:auto 1fr 130px 130px auto;gap:8px;align-items:center}
 .emp-num{font-size:12px;font-weight:700;color:var(--muted);width:22px;text-align:center}
-.emp-in{padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:13px;color:var(--text);background:#F8FAFC;outline:none;transition:border-color .2s;width:100%}
+.emp-in{padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'Fira Sans','Sarabun',sans-serif;font-size:13px;color:var(--text);background:#FDF6EC;outline:none;transition:border-color .2s;width:100%}
 .emp-in:focus{border-color:var(--blue);background:#fff}
-.emp-in-date{padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:12px;color:var(--text);background:#F8FAFC;outline:none;width:100%}
+.emp-in-date{padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:'Fira Sans','Sarabun',sans-serif;font-size:12px;color:var(--text);background:#FDF6EC;outline:none;width:100%}
 .emp-in-date:focus{border-color:var(--blue);background:#fff}
 .btn-rm{width:26px;height:26px;border-radius:6px;border:none;background:#FFF1F2;color:#BE123C;font-size:13px;cursor:pointer;display:grid;place-items:center;flex-shrink:0}
 .btn-rm:hover{background:#FFE4E6}
-.btn-add-emp{width:100%;padding:9px;border-radius:10px;border:1.5px dashed var(--border);background:none;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
-.btn-add-emp:hover{border-color:var(--blue);background:#EFF6FF}
+.btn-add-emp{width:100%;padding:9px;border-radius:10px;border:1.5px dashed var(--border);background:none;font-family:'Fira Sans','Sarabun',sans-serif;font-size:13px;color:var(--blue);font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}
+.btn-add-emp:hover{border-color:var(--blue);background:#FDECDC}
 .emp-header{display:grid;grid-template-columns:auto 1fr 130px 130px auto;gap:8px;margin-bottom:4px;padding:0 2px}
 .emp-header span{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
-thead th{text-align:left;padding:10px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:#F8FAFC;border-bottom:1px solid var(--border);white-space:nowrap}
+thead th{text-align:left;padding:10px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:#FDF6EC;border-bottom:1px solid var(--border);white-space:nowrap}
 tbody tr{transition:background .15s}
-tbody tr:hover{background:#F8FAFC}
-tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle}
+tbody tr:hover{background:#FDF6EC}
+tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle}
 .tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
 .t-amber{background:#FFFBEB;color:#92400E}
 .t-red{background:#FFF1F2;color:#BE123C}
 .t-green{background:#D1FAE5;color:#065F46}
-.t-blue{background:#EFF6FF;color:#1D4ED8}
-.al-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F1F5F9}
+.t-blue{background:#FDECDC;color:#A8460B}
+.al-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F5E9D6}
 .al-row:last-child{border-bottom:none}
 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .dot-r{background:#F43F5E;animation:pulse 1.8s ease-in-out infinite}
@@ -133,16 +133,16 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 .modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.25)}
 .modal-hdr{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
 .modal-title{font-size:16px;font-weight:700}
-.modal-x{width:28px;height:28px;border-radius:8px;border:none;background:#F1F5F9;cursor:pointer;font-size:15px;display:grid;place-items:center}
+.modal-x{width:28px;height:28px;border-radius:8px;border:none;background:#F5E9D6;cursor:pointer;font-size:15px;display:grid;place-items:center}
 .modal-body{padding:20px 22px 24px}
-.emp-detail-row{display:grid;grid-template-columns:1fr 120px 120px auto;gap:8px;align-items:center;padding:8px 10px;border-radius:8px;background:#F8FAFC;margin-bottom:6px}
+.emp-detail-row{display:grid;grid-template-columns:1fr 120px 120px auto;gap:8px;align-items:center;padding:8px 10px;border-radius:8px;background:#FDF6EC;margin-bottom:6px}
 .emp-detail-name{font-size:13px;font-weight:600}
 .emp-detail-date{font-size:12px;color:var(--muted)}
 .s-wrap{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.s-in{flex:1;min-width:160px;padding:9px 12px 9px 34px;border-radius:10px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:14px;color:var(--text);background:#F8FAFC url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%2394A3B8' stroke-width='2'/%3E%3Cpath d='m21 21-4.35-4.35' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 10px center no-repeat;outline:none;transition:border-color .2s}
+.s-in{flex:1;min-width:160px;padding:9px 12px 9px 34px;border-radius:10px;border:1.5px solid var(--border);font-family:'Fira Sans','Sarabun',sans-serif;font-size:14px;color:var(--text);background:#FDF6EC url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7' stroke='%2394A3B8' stroke-width='2'/%3E%3Cpath d='m21 21-4.35-4.35' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 10px center no-repeat;outline:none;transition:border-color .2s}
 .s-in:focus{border-color:var(--blue);background-color:#fff}
-.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#F8FAFC}
-.upload-zone:hover{border-color:var(--blue);background:#EFF6FF}
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#FDF6EC}
+.upload-zone:hover{border-color:var(--blue);background:#FDECDC}
 .upload-zone input{display:none}
 .upload-icon{font-size:36px;margin-bottom:10px}
 .upload-hint{font-size:13px;color:var(--muted)}
@@ -150,13 +150,13 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 .empty{text-align:center;padding:36px 20px;color:var(--muted)}
 .empty-icon{font-size:32px;margin-bottom:10px}
 .empty-text{font-size:13px}
-.toast{position:fixed;bottom:18px;right:18px;padding:11px 16px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;color:#fff;background:#1E293B;max-width:300px}
+.toast{position:fixed;bottom:18px;right:18px;padding:11px 16px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;color:#fff;background:#3A2A1C;max-width:300px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{background:var(--green)}
 .toast.error{background:var(--coral)}
 .spinner-ov{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;place-items:center;z-index:998}
 .spinner-big{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
-.log-row{display:flex;gap:8px;padding:9px 0;border-bottom:1px solid #F1F5F9;font-size:12px;flex-wrap:wrap}
+.log-row{display:flex;gap:8px;padding:9px 0;border-bottom:1px solid #F5E9D6;font-size:12px;flex-wrap:wrap}
 .log-time{color:var(--muted);flex-shrink:0;min-width:120px}
 .log-who{font-weight:600;flex-shrink:0;min-width:70px}
 .log-action{flex-shrink:0;min-width:110px;font-weight:600}
@@ -177,7 +177,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 }
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}.login-card{padding:30px 22px}.stat-num{font-size:20px}}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
-.eas-row{display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:center;padding:10px;background:#F8FAFC;border-radius:10px;margin-bottom:6px;border:1px solid var(--border)}
+.eas-row{display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:center;padding:10px;background:#FDF6EC;border-radius:10px;margin-bottom:6px;border:1px solid var(--border)}
 .eas-row.done{background:#F0FDF4;border-color:#BBF7D0}
 .eas-row.pending{background:#FFF7ED;border-color:#FED7AA}
 .eas-month{font-size:12px;font-weight:700;color:var(--navy)}
@@ -185,7 +185,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 .eas-status-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px}
 .eas-done{background:#D1FAE5;color:#065F46}
 .eas-pending-badge{background:#FEF3C7;color:#92400E}
-.month-select{padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:13px;background:#F8FAFC;outline:none;width:100%}
+.month-select{padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:'Fira Sans','Sarabun',sans-serif;font-size:13px;background:#FDF6EC;outline:none;width:100%}
 .month-select:focus{border-color:var(--blue)}
 
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -196,7 +196,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 <div id="login-wrap" class="login-wrap">
   <div class="login-card">
     <div style="text-align:center;margin-bottom:12px">
-      <img src="logo.jpg" alt="CT Logo" style="width:96px;height:96px;object-fit:contain;border-radius:16px;box-shadow:0 4px 16px rgba(59,130,246,0.15)">
+      <img src="logo.jpg" alt="CT Logo" style="width:96px;height:96px;object-fit:contain;border-radius:16px;box-shadow:0 4px 16px rgba(194,87,15,0.15)">
     </div>
     <div class="login-logo" style="font-size:18px;line-height:1.3">Acceptance and Additional Charge Review<div style="font-size:13px;font-weight:500;color:var(--muted);margin-top:6px">by CT</div></div>
     <div class="login-sub">ระบบเช็คใบ PO และ OT · CHAREON TUT</div>
@@ -204,9 +204,9 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <div class="fl"><label>อีเมล</label><input class="fi" id="l-em" type="email" placeholder="your@email.com" autofocus></div>
     <div class="fl"><label>รหัสผ่าน</label><input class="fi" id="l-pw" type="password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="login-btn" id="btn-login" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid #F1F5F9">
-      <div style="font-size:11px;color:#94A3B8">ออกแบบและพัฒนาโดย</div>
-      <div style="font-size:13px;font-weight:700;color:#1E3A5F;margin-top:3px;letter-spacing:0.03em">POR Admin CT</div>
+    <div style="text-align:center;margin-top:28px;padding-top:20px;border-top:1px solid #F5E9D6">
+      <div style="font-size:11px;color:#C7AE8E">ออกแบบและพัฒนาโดย</div>
+      <div style="font-size:13px;font-weight:700;color:#3D2414;margin-top:3px;letter-spacing:0.03em">POR Admin CT</div>
     </div>
   </div>
 </div>
@@ -220,7 +220,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
     <div style="display:flex;align-items:center;gap:10px;padding:0 12px 18px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px">
       <img src="logo.jpg" alt="CT" style="width:36px;height:36px;object-fit:contain;border-radius:8px;background:#fff;flex-shrink:0">
       <div>
-        <div style="font-family:'Prompt',sans-serif;font-size:16px;font-weight:700;color:#fff;line-height:1.2">AACR</div>
+        <div style="font-family:'DM Serif Display','Sarabun',serif;font-size:16px;font-weight:700;color:#fff;line-height:1.2">AACR</div>
         <div style="font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.05em">CHAREON TUT</div>
       </div>
     </div>
@@ -460,7 +460,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
       <!-- Tab: PO Bulk -->
       <div id="bulk-section-po">
         <div class="card" style="max-width:640px"><div class="card-body">
-          <div style="background:#EFF6FF;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13px;color:#1D4ED8;line-height:1.8">
+          <div style="background:#FDECDC;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13px;color:#A8460B;line-height:1.8">
             📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
             <strong>PO No. | DM | Start | End | Item | Name | EAS No | EAS Month</strong><br>
             <span style="color:var(--muted);font-size:12px">• 1 แถว = พนักงาน 1 คน ใน 1 ช่วงเวลา<br>
@@ -648,7 +648,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
               <col style="width:2%">
             </colgroup>
             <thead style="position:sticky;top:0;z-index:2">
-              <tr style="background:#1E3A5F;color:#fff;font-size:11px">
+              <tr style="background:#3D2414;color:#fff;font-size:11px">
                 <th style="padding:8px 10px;text-align:left;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">เลข PO</th>
                 <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">ประเภท</th>
                 <th style="padding:8px 6px;text-align:center;font-weight:700;border-right:1px solid rgba(255,255,255,.1)">MM/YYYY</th>
@@ -709,7 +709,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
   <div class="modal-hdr"><div class="modal-title">✏️ แก้ไข OT</div><button class="modal-x" onclick="closeM('m-ot-edit')">✕</button></div>
   <div class="modal-body">
     <input type="hidden" id="edit-ot-idx">
-    <div id="edit-ot-info" style="background:#F8FAFC;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--muted)"></div>
+    <div id="edit-ot-info" style="background:#FDF6EC;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--muted)"></div>
     <div class="fg"><label>เลข PO_OT</label><input class="fi2" id="edit-ot-poot" placeholder="OT-1234 (ไม่บังคับ)"></div>
     <div class="frow">
       <div class="fg"><label>OT จ่ายพนักงาน (บาท) *</label><input class="fi2" id="edit-ot-pay" type="number" placeholder="0.00" min="0"></div>
@@ -769,7 +769,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F1F5F9;vertical-align:middle
 <div class="mbg" id="m-tracking-import"><div class="modal" style="max-width:680px">
   <div class="modal-hdr"><div class="modal-title">📂 Import Tracking No. จาก Excel</div><button class="modal-x" onclick="closeM('m-tracking-import')">✕</button></div>
   <div class="modal-body">
-    <div style="background:#EFF6FF;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1D4ED8;line-height:1.8">
+    <div style="background:#FDECDC;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#A8460B;line-height:1.8">
       📌 รองรับไฟล์จาก <strong>ระบบตรวจสอบ Tracking No.</strong> โดยตรง<br>
       Header ที่ต้องมี: <strong>เลข PO | Tracking No. | Status AIS</strong><br>
       <span style="color:var(--muted);font-size:12px">• Tracking No. ที่มีในระบบอยู่แล้วจะถูกข้ามโดยอัตโนมัติ</span>
@@ -969,7 +969,7 @@ function renderDashEAS(){
   const el=document.getElementById('dash-eas')
   if(!el) return
   el.innerHTML=rec.length?rec.map(function(r){
-    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F5F9">'+
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F5E9D6">'+
       '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+r.empName+'</div>'+
       '<div style="font-size:11px;color:var(--muted)">'+r.poNum+' · '+r.month+(r.item?' · '+r.item:'')+'</div></div>'+
       '<div style="font-size:11px;font-weight:700;color:var(--green)">'+r.easNo.substring(0,12)+'</div></div>'
@@ -1021,7 +1021,7 @@ function renderDashOT(){
   const el=document.getElementById('dash-ot')
   const rec=[...C.ot].reverse().slice(0,4)
   el.innerHTML=rec.length?rec.map(r=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F5F9">
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F5E9D6">
       <div style="flex:1"><div style="font-size:13px;font-weight:600">${r[1]||''}</div>
       <div style="font-size:11px;color:var(--muted)">${r[0]?r[0]+' · ':''}${r[3]||''}</div></div>
       <div style="font-size:12px;font-weight:700;color:var(--green)">฿${num(r[4])}</div>
@@ -1084,7 +1084,7 @@ function renderOTT(){
   const totalPay=rows.reduce((s,r)=>s+Number(r[4]||0),0)
   const totalBill=rows.reduce((s,r)=>s+Number(r[5]||0),0)
   const totalProfit=rows.reduce((s,r)=>s+Number(r[6]||0),0)
-  document.getElementById('ot-tfoot').innerHTML=rows.length?`<tr style="background:#F8FAFC;border-top:2px solid var(--border)">
+  document.getElementById('ot-tfoot').innerHTML=rows.length?`<tr style="background:#FDF6EC;border-top:2px solid var(--border)">
     <td colspan="5" style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--muted)">รวม ${rows.length} รายการ</td>
     <td style="padding:10px 12px;color:var(--green);font-weight:700">฿${num(totalPay)}</td>
     <td style="padding:10px 12px;color:var(--coral);font-weight:700">฿${num(totalBill)}</td>
@@ -1157,14 +1157,14 @@ async function showPODetail(poNum){
     ${emps.length?`
     <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#F8FAFC">
+        <thead><tr style="background:#FDF6EC">
           <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:700">ชื่อพนักงาน</th>
           <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:700">วันเริ่ม</th>
           <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:700">วันสิ้นสุด</th>
           <th style="padding:8px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:700">จัดการ</th>
         </tr></thead>
         <tbody>${emps.map(e=>`
-          <tr style="border-top:1px solid #F1F5F9">
+          <tr style="border-top:1px solid #F5E9D6">
             <td style="padding:9px 12px;font-weight:600">${e.name}</td>
             <td style="padding:9px 12px;color:var(--muted);font-size:12px">${e.start||'—'}</td>
             <td style="padding:9px 12px;color:var(--muted);font-size:12px">${e.end||'—'}</td>
@@ -1177,7 +1177,7 @@ async function showPODetail(poNum){
           </tr>`).join('')}</tbody>
       </table>
     </div>` : '<p style="color:var(--muted);font-size:13px;margin-bottom:14px">ยังไม่มีพนักงาน</p>'}
-    <div style="background:#F8FAFC;border-radius:10px;padding:14px;margin-bottom:14px">
+    <div style="background:#FDF6EC;border-radius:10px;padding:14px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px">➕ เพิ่มพนักงานใหม่</div>
       <div style="display:grid;grid-template-columns:1fr 120px 120px auto;gap:8px;align-items:end">
         <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">ชื่อพนักงาน *</label><input class="fi2" id="add-emp-name" placeholder="ชื่อ นามสกุล" style="font-size:13px;padding:8px 10px"></div>
@@ -1192,12 +1192,12 @@ async function showPODetail(poNum){
         <button class="btn btn-ghost btn-sm" onclick="loadEASForPO('${r.poNum}')">🔄 รีเฟรช</button>
       </div>
       <div id="eas-list-${r.poNum}" style="margin-bottom:14px"><div style="color:var(--muted);font-size:13px">กำลังโหลด EAS...</div></div>
-      <div style="background:#F0F4FF;border-radius:12px;padding:16px">
+      <div style="background:#FBF3E7;border-radius:12px;padding:16px">
         <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px">➕ บันทึก EAS ใหม่</div>
         <div style="margin-bottom:8px">
           <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px">เลือกพนักงาน * <span style="font-weight:400;color:var(--blue)">(ติ๊กได้หลายคน — เลข EAS เดียวกัน)</span></label>
           <div id="eas-emp-list-${r.poNum}" style="display:flex;flex-direction:column;gap:5px;max-height:120px;overflow-y:auto;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:8px">
-            ${emps.map(e=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:3px 4px;border-radius:4px" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background=''">
+            ${emps.map(e=>`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:3px 4px;border-radius:4px" onmouseover="this.style.background='#F5E9D6'" onmouseout="this.style.background=''">
               <input type="checkbox" class="eas-emp-ck" value="${e.name}" onchange="autoFillItemFromEmp('${r.poNum}',this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--blue)">
               ${e.name}
             </label>`).join('')}
@@ -1500,7 +1500,7 @@ async function submitOT(){
 // ── Export ───────────────────────────────────────────────────
 function showExportModal(){
   document.getElementById('export-po-list').innerHTML=C.po.map(r=>`
-    <label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid #F1F5F9;cursor:pointer;font-size:13px">
+    <label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid #F5E9D6;cursor:pointer;font-size:13px">
       <input type="checkbox" value="${r[0]}" checked style="width:15px;height:15px;cursor:pointer">
       <span><strong>${r[0]}</strong> — ${r[1]||''}</span>
     </label>`).join('')
@@ -1698,7 +1698,7 @@ async function loadEASForPO(poNum){
       var color=done?'#065F46':'#92400E'
       var icon=done?'✅':'❌'
       var titleTxt=(row.easNo||'ยังไม่มีเลข EAS')+(row.remark?' | '+row.remark:'')
-      var easShort=row.easNo?('<div style="font-size:10px;color:#64748B">'+row.easNo.substring(0,12)+'...</div>'):'';
+      var easShort=row.easNo?('<div style="font-size:10px;color:#8C7862">'+row.easNo.substring(0,12)+'...</div>'):'';
       html+='<div style="background:'+bg+';border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;border:1px solid '+border+'" title="'+titleTxt+'" onclick="editEAS('+row.idx+',\''+poNum+'\')">'+
         '<div style="font-weight:700">'+row.month+'</div>'+
         '<div style="color:'+color+'">'+icon+'</div>'+
@@ -1857,7 +1857,7 @@ async function showPendingPODetail(poNum){
   var tbodyHtml=Object.entries(grp).map(function(e){
     var name=e[0],d=e[1]
     var months=d.months.map(function(m){return'<span class="tag t-red" style="margin:1px">'+m+'</span>'}).join('')
-    return'<tr style="border-top:1px solid #F1F5F9">'+
+    return'<tr style="border-top:1px solid #F5E9D6">'+
       '<td style="padding:9px 12px;font-weight:600">'+name+'</td>'+
       '<td style="padding:9px 12px;font-size:12px;color:var(--muted)">'+(d.empStart||'—')+' → '+(d.empEnd||'—')+'</td>'+
       '<td style="padding:9px 12px">'+months+'</td></tr>'
@@ -1869,7 +1869,7 @@ async function showPendingPODetail(poNum){
   html+='</div>'
   html+='<div class="card-body">'
   html+='<table style="width:100%;border-collapse:collapse;font-size:13px">'
-  html+='<thead><tr style="background:#F8FAFC">'
+  html+='<thead><tr style="background:#FDF6EC">'
   html+='<th style="padding:8px 12px;text-align:left">พนักงาน</th>'
   html+='<th style="padding:8px 12px;text-align:left">ช่วงเวลา</th>'
   html+='<th style="padding:8px 12px;text-align:left">เดือนที่ขาด</th>'
@@ -2009,10 +2009,10 @@ function renderTracking(){
     tbody.innerHTML='<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--muted)">ไม่พบรายการ</td></tr>'
     return
   }
-  const bd='1px solid #E2E8F0'
+  const bd='1px solid #EFE0C8'
   tbody.innerHTML=rows.map(function(r,i){
     const st=AIS_STATUS[r.statusAIS]||{label:r.statusAIS,cls:'t-amber',icon:''}
-    const style=TR_ROW_STYLE[r.statusAIS]||{bg:i%2===0?'#fff':'#F8FAFC',border:'#E2E8F0',dot:'#94A3B8'}
+    const style=TR_ROW_STYLE[r.statusAIS]||{bg:i%2===0?'#fff':'#FDF6EC',border:'#EFE0C8',dot:'#C7AE8E'}
     const bg=style.bg
     const br=style.border
     const fmtD=v=>v?v.replace(/(\d{4})-(\d{2})-(\d{2}).*/,'$3/$2/$1'):''
@@ -2020,13 +2020,13 @@ function renderTracking(){
     const td=(extra='')=>`padding:7px 8px;border-bottom:1px solid ${br};border-right:${bd};vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${extra}`
     return`<tr style="background:${bg}" title="">
       <td style="${td('font-weight:600;color:var(--navy);font-size:11.5px')}" title="${esc(r.po)}">${esc(r.po)}</td>
-      <td style="${td('text-align:center')}"><span style="background:#EFF6FF;color:#1E40AF;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px">${esc(r.type)}</span></td>
+      <td style="${td('text-align:center')}"><span style="background:#FDECDC;color:#93400C;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px">${esc(r.type)}</span></td>
       <td style="${td('text-align:center;color:var(--muted);font-size:11px')}">${esc(r.month)}</td>
       <td style="${td('font-size:11px')}" title="${esc(r.dm)}">${esc(r.dm)}</td>
       <td style="${td('text-align:center')}"><span style="background:#D1FAE5;color:#065F46;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px">${esc(r.statusCT)||'—'}</span></td>
       <td style="${td('text-align:center;color:var(--muted);font-size:11px')}">${fmtD(r.sentDate)}</td>
       <td style="${td('font-size:11px')}" title="${esc(r.note)}"><span style="color:${r.statusAIS==='Reject'?'#BE123C':'inherit'}">${esc(r.note)}</span></td>
-      <td style="${td('font-family:monospace;font-size:10.5px;color:#1E3A5F')}" title="${esc(r.trackingNo)}">${esc(r.trackingNo)}</td>
+      <td style="${td('font-family:monospace;font-size:10.5px;color:#3D2414')}" title="${esc(r.trackingNo)}">${esc(r.trackingNo)}</td>
       <td style="${td('text-align:center')}">
         <span style="display:inline-flex;align-items:center;gap:4px;border:1.5px solid ${br};border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;color:${style.dot}">
           <span style="width:5px;height:5px;border-radius:50%;background:${style.dot};flex-shrink:0"></span>${st.label}
@@ -2053,7 +2053,7 @@ function filterByTrackingStatus(status){
     if(el) el.style.outline=''
   })
   const active=map[status]
-  if(active){const el=document.getElementById(active);if(el) el.style.outline='3px solid #3B82F6'}
+  if(active){const el=document.getElementById(active);if(el) el.style.outline='3px solid #C2570F'}
 }
 function clearTrackingFilters(){
   document.getElementById('tr-f-status').value=''
@@ -2094,7 +2094,7 @@ function openTrackingModal(idx){
     const sentLabel=document.getElementById('tr-sent-date-label')
     if(row.sentDate){
       sentInput.setAttribute('readonly','readonly')
-      sentInput.style.background='#F1F5F9'
+      sentInput.style.background='#F5E9D6'
       sentInput.style.cursor='not-allowed'
       sentInput.style.color='var(--muted)'
       sentLabel.innerHTML='วันที่ส่ง <span style="font-size:10px;opacity:.7">🔒</span>'
@@ -2269,7 +2269,7 @@ function parseTrackingImport(raw){
     const noteShort=r.note.length>30?r.note.substring(0,30)+'...':r.note
     return`<tr>
       <td>${esc(r.po)}</td>
-      <td><span class="tag" style="background:#EFF6FF;color:#1D4ED8">${esc(r.type)}</span></td>
+      <td><span class="tag" style="background:#FDECDC;color:#A8460B">${esc(r.type)}</span></td>
       <td style="font-size:12px">${esc(r.month)}</td>
       <td style="font-size:11px;font-family:monospace">${esc(r.trackingNo)}</td>
       <td><span class="tag ${st.cls}">${st.icon} ${st.label}</span></td>
