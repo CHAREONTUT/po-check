@@ -9,7 +9,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--blue:#C2570F;--indigo:#F0923D;--amber:#F59E0B;--teal:#14B8A6;--coral:#F43F5E;--green:#10B981;--navy:#3D2414;--bg:#FBF3E7;--card:#fff;--text:#3A2A1C;--muted:#8C7862;--border:#EFE0C8}
 body{font-family:'Fira Sans','Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3D2414,#C2570F 50%,#F0923D);padding:20px}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
 .login-card{background:#fff;border-radius:24px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.25)}
 .login-logo{font-family:'DM Serif Display','Sarabun',serif;font-size:30px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:6px}
 .login-logo span{color:var(--blue)}
@@ -199,7 +199,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
       <img src="logo.jpg" alt="CT Logo" style="width:96px;height:96px;object-fit:contain;border-radius:16px;box-shadow:0 4px 16px rgba(194,87,15,0.15)">
     </div>
     <div class="login-logo" style="font-size:18px;line-height:1.3">Acceptance and Additional Charge Review<div style="font-size:13px;font-weight:500;color:var(--muted);margin-top:6px">by CT</div></div>
-    <div class="login-sub">ระบบเช็คใบ PO และ OT · CHAREON TUT</div>
+    <div class="login-sub">ระบบเช็คใบ PO และล่วงเวลาทำงาน · CHAREON TUT</div>
     <div id="login-err" class="login-err"></div>
     <div class="fl"><label>อีเมล</label><input class="fi" id="l-em" type="email" placeholder="your@email.com" autofocus></div>
     <div class="fl"><label>รหัสผ่าน</label><input class="fi" id="l-pw" type="password" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')doLogin()"></div>
@@ -229,16 +229,13 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <button class="nav-item active" onclick="nav('dash',this)">⊞ Dashboard</button>
     <button class="nav-item" onclick="nav('po-list',this)">📄 รายการ PO</button>
     <button class="nav-item" onclick="nav('alert',this)">🔔 แจ้งเตือน <span class="nav-badge" id="al-badge">0</span></button>
-    <div class="nav-sec">OT</div>
-    <button class="nav-item" onclick="nav('ot-form',this)">⏱ บันทึก OT</button>
-    <button class="nav-item" onclick="nav('ot-list',this)">📊 รายการ OT</button>
+    <button class="nav-item" onclick="nav('tracking',this);loadTracking()">📦 Tracking No.</button>
+    <div class="nav-sec">ล่วงเวลาทำงาน</div>
+    <button class="nav-item" onclick="nav('ot-form',this)">⏱ บันทึกล่วงเวลาทำงาน</button>
+    <button class="nav-item" onclick="nav('ot-list',this)">📊 รายการล่วงเวลาทำงาน</button>
     <div class="nav-sec">Admin</div>
     <button class="nav-item" onclick="nav('po-form',this)">➕ เพิ่ม PO</button>
     <button class="nav-item" onclick="nav('bulk',this)">📤 Bulk Upload</button>
-    <button class="nav-item" onclick="nav('eas-pending',this);loadPending()">🔴 EAS ยังไม่วาง</button>
-    <button class="nav-item" onclick="nav('eas-placed',this);loadPlaced()">✅ EAS วางแล้ว</button>
-    <div class="nav-sec">Tracking</div>
-    <button class="nav-item" onclick="nav('tracking',this);loadTracking()">📦 Tracking No.</button>
     <button class="logout-btn" onclick="doLogout()">🚪 ออกจากระบบ</button>
   </aside>
 
@@ -252,17 +249,13 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
       <div class="stats">
         <div class="stat-card sc-blue" onclick="nav('po-list',null)"><div class="stat-icon">📄</div><div class="stat-num" id="s-po">—</div><div class="stat-label">ใบ PO ทั้งหมด</div><div class="stat-badge bo" id="s-po-s">—</div><div class="stat-hint">คลิกดูรายการ →</div></div>
         <div class="stat-card sc-amber" onclick="nav('alert',null)"><div class="stat-icon">⚠️</div><div class="stat-num" id="s-al">—</div><div class="stat-label">PO ใกล้หมดสัญญา</div><div class="stat-badge bw">14 วัน</div><div class="stat-hint">คลิกดูรายการ →</div></div>
-        <div class="stat-card sc-teal" onclick="nav('ot-list',null)"><div class="stat-icon">⏱</div><div class="stat-num" id="s-ot">—</div><div class="stat-label">รายการ OT ทั้งหมด</div><div class="stat-badge bo">รายการ</div><div class="stat-hint">คลิกดูรายการ →</div></div>
+        <div class="stat-card sc-teal" onclick="nav('ot-list',null)"><div class="stat-icon">⏱</div><div class="stat-num" id="s-ot">—</div><div class="stat-label">รายการล่วงเวลาทำงานทั้งหมด</div><div class="stat-badge bo">รายการ</div><div class="stat-hint">คลิกดูรายการ →</div></div>
         <div class="stat-card sc-coral" onclick="nav('eas-pending',null);loadPending()"><div class="stat-icon">📋</div><div class="stat-num" id="s-eas-placed">—</div><div class="stat-label">EAS วางแล้วเดือนนี้</div><div class="stat-badge bw">EAS</div><div class="stat-hint">คลิกดู EAS ยังไม่วาง →</div></div>
         <div class="stat-card" style="border-top:3px solid #F43F5E;cursor:pointer" onclick="document.getElementById('expired-card').scrollIntoView({behavior:'smooth'})"><div class="stat-icon" style="background:#FFF1F2">📛</div><div class="stat-num" id="s-expired" style="color:#BE123C">—</div><div class="stat-label">PO หมดสัญญาแล้ว</div><div class="stat-badge t-red">หมดแล้ว</div><div class="stat-hint" style="color:#BE123C">คลิกดูรายการ ↓</div></div>
       </div>
       <div class="grid2">
         <div class="card"><div class="card-hdr"><div class="card-title">🔔 PO ใกล้หมดสัญญา</div><button class="btn btn-ghost btn-sm" onclick="nav('alert',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-al"></div></div>
-        <div class="card"><div class="card-hdr"><div class="card-title">⏱ OT ล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="nav('ot-list',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-ot"></div></div>
-      </div>
-      <div class="grid2">
-        <div class="card"><div class="card-hdr"><div class="card-title">✅ EAS วางล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="nav('eas-placed',null);loadPlaced()">ดูทั้งหมด</button></div><div class="card-body" id="dash-eas"></div></div>
-        <div class="card"><div class="card-hdr"><div class="card-title">🔴 EAS ยังไม่วาง</div><button class="btn btn-ghost btn-sm" onclick="nav('eas-pending',null);loadPending()">ดูทั้งหมด</button></div><div class="card-body" id="dash-eas-pending"></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">⏱ ล่วงเวลาทำงานล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="nav('ot-list',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-ot"></div></div>
       </div>
       <div class="card" id="expired-card" style="margin-bottom:18px">
         <div class="card-hdr">
@@ -327,14 +320,14 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
 
     <!-- OT FORM -->
     <div class="page" id="page-ot-form">
-      <div class="topbar"><div><div class="page-title">⏱ บันทึก OT</div><div class="page-sub">เลือก PO แล้วกรอก OT แต่ละพนักงานพร้อมกัน</div></div></div>
+      <div class="topbar"><div><div class="page-title">⏱ บันทึกล่วงเวลาทำงาน</div><div class="page-sub">เลือก PO แล้วกรอกล่วงเวลาทำงานแต่ละพนักงานพร้อมกัน</div></div></div>
       <div class="card" style="max-width:820px"><div class="card-body">
 
         <!-- Toggle Old Year -->
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:10px 14px;background:#FFF7ED;border-radius:10px;border:1px solid #FED7AA;flex-wrap:wrap">
           <label class="ck-wrap" style="cursor:pointer;gap:8px" onclick="toggleOldPO()">
             <div class="ck-box" id="ot-old-ckbox"></div>
-            <span style="font-size:13px;font-weight:600;color:#92400E">⏳ บันทึก OT ปีที่แล้ว (ใส่เลข PO เอง)</span>
+            <span style="font-size:13px;font-weight:600;color:#92400E">⏳ บันทึกล่วงเวลาทำงานปีที่แล้ว (ใส่เลข PO เอง)</span>
           </label>
           <select class="fi2" id="ot-old-year" style="display:none;width:120px;padding:7px 10px;font-size:13px" onchange="updateOldMonths()">
             <option value="2023">ปี 2023</option>
@@ -364,15 +357,15 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
             ⚠️ ไม่พบพนักงานใน PO นี้ กรุณาเพิ่มพนักงานก่อนที่เมนู <strong>รายการ PO</strong>
           </div>
           <div id="ot-emp-section" style="display:none;margin-top:14px">
-            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border)">📋 กรอก OT ต่อพนักงาน <span class="opt">(กรอกเฉพาะพนักงานที่มี OT)</span></div>
+            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border)">📋 กรอกล่วงเวลาทำงานต่อพนักงาน <span class="opt">(กรอกเฉพาะพนักงานที่มีล่วงเวลาทำงาน)</span></div>
             <div class="tbl-wrap">
               <table style="min-width:600px">
                 <thead><tr>
                   <th style="padding-left:12px">ชื่อพนักงาน</th>
                   <th>ช่วงเวลาสัญญา</th>
                   <th>เดือนที่เบิก *</th>
-                  <th>OT จ่ายพนักงาน (฿) *</th>
-                  <th>OT เรียกเก็บลูกค้า (฿) *</th>
+                  <th>ล่วงเวลาทำงาน จ่ายพนักงาน (฿) *</th>
+                  <th>ล่วงเวลาทำงาน เรียกเก็บลูกค้า (฿) *</th>
                 </tr></thead>
                 <tbody id="ot-emp-tbody"></tbody>
               </table>
@@ -383,7 +376,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
         <!-- Old Year PO section -->
         <div id="ot-old-section" style="display:none">
           <div style="background:#FFFBEB;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#92400E">
-            📌 กรอกข้อมูล OT ของปีที่ระบุ ระบบจะบันทึกพร้อมหมายเหตุปีที่เลือก
+            📌 กรอกข้อมูลล่วงเวลาทำงานของปีที่ระบุ ระบบจะบันทึกพร้อมหมายเหตุปีที่เลือก
           </div>
           <div class="frow">
             <div class="fg">
@@ -417,8 +410,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
                 <thead>
                   <tr style="background:var(--surface)">
                     <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">ชื่อพนักงาน</th>
-                    <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">OT จ่ายพนักงาน (฿)</th>
-                    <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">OT เรียกเก็บลูกค้า (฿)</th>
+                    <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">ล่วงเวลาทำงาน จ่ายพนักงาน (฿)</th>
+                    <th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">ล่วงเวลาทำงาน เรียกเก็บลูกค้า (฿)</th>
                     <th style="padding:8px 8px;width:44px;border-bottom:1px solid var(--border)"></th>
                   </tr>
                 </thead>
@@ -434,7 +427,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
 
     <!-- OT LIST -->
     <div class="page" id="page-ot-list">
-      <div class="topbar"><div><div class="page-title">📊 รายการ OT ทั้งหมด</div></div>
+      <div class="topbar"><div><div class="page-title">📊 รายการล่วงเวลาทำงานทั้งหมด</div></div>
         <div class="topbar-right">
           <input class="s-in" id="ot-f" placeholder="🔍 กรองชื่อพนักงาน" style="width:170px" oninput="renderOTT()">
           <button class="btn btn-green" onclick="exportOT()">📥 Export Excel</button>
@@ -706,14 +699,14 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
 
 <!-- MODAL: Edit OT -->
 <div class="mbg" id="m-ot-edit"><div class="modal" style="max-width:460px">
-  <div class="modal-hdr"><div class="modal-title">✏️ แก้ไข OT</div><button class="modal-x" onclick="closeM('m-ot-edit')">✕</button></div>
+  <div class="modal-hdr"><div class="modal-title">✏️ แก้ไขล่วงเวลาทำงาน</div><button class="modal-x" onclick="closeM('m-ot-edit')">✕</button></div>
   <div class="modal-body">
     <input type="hidden" id="edit-ot-idx">
     <div id="edit-ot-info" style="background:#FDF6EC;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--muted)"></div>
     <div class="fg"><label>เลข PO_OT</label><input class="fi2" id="edit-ot-poot" placeholder="OT-1234 (ไม่บังคับ)"></div>
     <div class="frow">
-      <div class="fg"><label>OT จ่ายพนักงาน (บาท) *</label><input class="fi2" id="edit-ot-pay" type="number" placeholder="0.00" min="0"></div>
-      <div class="fg"><label>OT เรียกเก็บลูกค้า (บาท) *</label><input class="fi2" id="edit-ot-bill" type="number" placeholder="0.00" min="0"></div>
+      <div class="fg"><label>ล่วงเวลาทำงาน จ่ายพนักงาน (บาท) *</label><input class="fi2" id="edit-ot-pay" type="number" placeholder="0.00" min="0"></div>
+      <div class="fg"><label>ล่วงเวลาทำงาน เรียกเก็บลูกค้า (บาท) *</label><input class="fi2" id="edit-ot-bill" type="number" placeholder="0.00" min="0"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-primary" onclick="saveEditOT()">💾 บันทึก</button>
@@ -813,8 +806,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <div class="frow">
       <div class="fg"><label>MM/YYYY</label><input class="fi2" id="tr-month" placeholder="10/2025"></div>
       <div class="fg"><label>Department Manager</label>
-        <select class="fi2" id="tr-dm">
-          <option value="">— เลือก DM —</option>
+        <input class="fi2" id="tr-dm" list="tr-dm-datalist" placeholder="เลือกหรือพิมพ์ชื่อ DM ใหม่..." autocomplete="off">
+        <datalist id="tr-dm-datalist">
           <option>K.Worawut Jampama</option>
           <option>K.Asmavee Noinongyao</option>
           <option>K.Sakda Eamwiwattanakool</option>
@@ -833,7 +826,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
           <option>K.Akekachai Ponil</option>
           <option>K.Kosit Chotibut</option>
           <option>K.Thawatchai Banmai</option>
-        </select>
+        </datalist>
       </div>
     </div>
     <div class="frow">
@@ -1026,7 +1019,7 @@ function renderDashOT(){
       <div style="font-size:11px;color:var(--muted)">${r[0]?r[0]+' · ':''}${r[3]||''}</div></div>
       <div style="font-size:12px;font-weight:700;color:var(--green)">฿${num(r[4])}</div>
     </div>`).join('')
-  :`<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ยังไม่มีรายการ OT</div></div>`
+  :`<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">ยังไม่มีรายการล่วงเวลาทำงาน</div></div>`
 }
 
 function renderPOT(){
@@ -1120,13 +1113,13 @@ async function saveEditOT(){
   const otBill=document.getElementById('edit-ot-bill').value
   if(!otPay||!otBill){toast('กรุณากรอกยอดเงิน','error');return}
   const r=await api('PUT',`/api/ot/${EDIT_OT_IDX}`,{otPay,otBill,poOt})
-  if(r.ok){toast('แก้ไข OT สำเร็จ ✅','success');closeM('m-ot-edit');loadAll()}
+  if(r.ok){toast('แก้ไขล่วงเวลาทำงานสำเร็จ ✅','success');closeM('m-ot-edit');loadAll()}
   else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
 async function deleteOT(idx){
-  if(!confirm('ลบรายการ OT นี้?')) return
+  if(!confirm('ลบรายการล่วงเวลาทำงานนี้?')) return
   const r=await api('DELETE',`/api/ot/${idx}`)
-  if(r.ok){toast('ลบ OT สำเร็จ','success');loadAll()}
+  if(r.ok){toast('ลบล่วงเวลาทำงานสำเร็จ','success');loadAll()}
   else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
 
@@ -1464,7 +1457,7 @@ async function submitOT(){
     for(const entry of entries){const r=await api('POST','/api/ot',entry);if(r.ok)success++;else failed++}
     setLoad('btn-ot',false)
     if(success){
-      toast(`บันทึก OT ปี ${yearRemark} สำเร็จ ${success} รายการ${failed?` (ไม่สำเร็จ ${failed})`:''}✅`,'success')
+      toast(`บันทึกล่วงเวลาทำงานปี ${yearRemark} สำเร็จ ${success} รายการ${failed?` (ไม่สำเร็จ ${failed})`:''}✅`,'success')
       ;['ot-po-old','ot-dt-old','ot-poot-old'].forEach(i=>document.getElementById(i).value='')
       document.getElementById('ot-month-old').selectedIndex=0
       document.getElementById('ot-old-emp-tbody').innerHTML=''
@@ -1484,13 +1477,13 @@ async function submitOT(){
     const bill=row.querySelector('.ot-bill-inp')?.value||''
     if(empName&&month&&pay&&bill) entries.push({poNum,empName,poOt,docDate,otPay:pay,otBill:bill,otMonth:month})
   })
-  if(!entries.length){toast('กรุณาเลือกเดือนและกรอกยอดเงิน OT อย่างน้อย 1 รายการ','error');return}
+  if(!entries.length){toast('กรุณาเลือกเดือนและกรอกยอดเงินล่วงเวลาทำงานอย่างน้อย 1 รายการ','error');return}
   setLoad('btn-ot',true)
   let success=0,failed=0
   for(const entry of entries){const r=await api('POST','/api/ot',entry);if(r.ok)success++;else failed++}
   setLoad('btn-ot',false)
   if(success){
-    toast(`บันทึก OT สำเร็จ ${success} รายการ${failed?' (ไม่สำเร็จ '+failed+')':''}✅`,'success')
+    toast(`บันทึกล่วงเวลาทำงานสำเร็จ ${success} รายการ${failed?' (ไม่สำเร็จ '+failed+')':''}✅`,'success')
     ;['ot-po','ot-dt','ot-poot'].forEach(i=>document.getElementById(i).value='')
     document.getElementById('ot-emp-section').style.display='none'
     loadAll()
@@ -1549,7 +1542,7 @@ function exportOT(){
     return [...r, easNo]
   })
   dlXLSX([hdr,...withEAS],`OT_Export_${today()}.xlsx`)
-  toast('Export OT สำเร็จ ✅','success')
+  toast('Export ล่วงเวลาทำงานสำเร็จ ✅','success')
 }
 function dlXLSX(rows,fn){
   loadXLSX(()=>{
