@@ -605,24 +605,6 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
         </select>
         <select class="fi2" id="tr-f-dm" onchange="renderTracking()" style="padding:7px 10px;font-size:12px;width:auto">
           <option value="">🔽 DM ทั้งหมด</option>
-          <option>K.Worawut Jampama</option>
-          <option>K.Asmavee Noinongyao</option>
-          <option>K.Sakda Eamwiwattanakool</option>
-          <option>K.Jariya Somjitchob</option>
-          <option>K.Bundit Kasemassawachanon</option>
-          <option>K.Watchara Yodin</option>
-          <option>K.Sureeporn Suksumak</option>
-          <option>K.Sanya Sirimongkol</option>
-          <option>K.Navarat Rodprapakorn</option>
-          <option>K.Terdsak Sukumsirichart</option>
-          <option>K.Worawadee Keinprasit</option>
-          <option>K.Santichai Wongwai</option>
-          <option>K.Warayuth Wongpaiboonwattana</option>
-          <option>K.Areeya Hanphichanchai</option>
-          <option>K.Phanuwat Chumrusch</option>
-          <option>K.Akekachai Ponil</option>
-          <option>K.Kosit Chotibut</option>
-          <option>K.Thawatchai Banmai</option>
         </select>
         <input class="fi2" id="tr-search" placeholder="🔍 ค้นหา PO, Tracking No., Note..." oninput="renderTracking()" style="padding:7px 12px;font-size:12px;flex:1;min-width:160px">
         <button class="btn btn-ghost btn-sm" onclick="clearTrackingFilters()">✕ ล้าง</button>
@@ -808,24 +790,24 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
       <div class="fg"><label>Department Manager</label>
         <input class="fi2" id="tr-dm" list="tr-dm-datalist" placeholder="เลือกหรือพิมพ์ชื่อ DM ใหม่..." autocomplete="off">
         <datalist id="tr-dm-datalist">
-          <option>K.Worawut Jampama</option>
-          <option>K.Asmavee Noinongyao</option>
-          <option>K.Sakda Eamwiwattanakool</option>
-          <option>K.Jariya Somjitchob</option>
-          <option>K.Bundit Kasemassawachanon</option>
-          <option>K.Watchara Yodin</option>
-          <option>K.Sureeporn Suksumak</option>
-          <option>K.Sanya Sirimongkol</option>
-          <option>K.Navarat Rodprapakorn</option>
-          <option>K.Terdsak Sukumsirichart</option>
-          <option>K.Worawadee Keinprasit</option>
-          <option>K.Santichai Wongwai</option>
-          <option>K.Warayuth Wongpaiboonwattana</option>
-          <option>K.Areeya Hanphichanchai</option>
-          <option>K.Phanuwat Chumrusch</option>
           <option>K.Akekachai Ponil</option>
+          <option>K.Areeya Hanphichanchai</option>
+          <option>K.Asmavee Noinongyao</option>
+          <option>K.Bundit Kasemassawachanon</option>
+          <option>K.Jariya Somjitchob</option>
           <option>K.Kosit Chotibut</option>
+          <option>K.Navarat Rodprapakorn</option>
+          <option>K.Phanuwat Chumrusch</option>
+          <option>K.Sakda Eamwiwattanakool</option>
+          <option>K.Sanya Sirimongkol</option>
+          <option>K.Santichai Wongwai</option>
+          <option>K.Sureeporn Suksumak</option>
+          <option>K.Terdsak Sukumsirichart</option>
           <option>K.Thawatchai Banmai</option>
+          <option>K.Warayuth Wongpaiboonwattana</option>
+          <option>K.Watchara Yodin</option>
+          <option>K.Worawadee Keinprasit</option>
+          <option>K.Worawut Jampama</option>
         </datalist>
       </div>
     </div>
@@ -1973,7 +1955,18 @@ async function loadTracking(){
     document.getElementById('tr-completed').textContent=s.completed
     document.getElementById('tr-reject').textContent=s.reject
   }
+  syncDMOptions()
   renderTracking()
+}
+
+function syncDMOptions(){
+  const fromData=C_TRACKING.map(r=>r.dm).filter(Boolean)
+  const known=[...document.querySelectorAll('#tr-dm-datalist option')].map(o=>o.value)
+  const all=[...new Set([...known,...fromData])].sort((a,b)=>a.localeCompare(b))
+  document.getElementById('tr-dm-datalist').innerHTML=all.map(n=>`<option>${esc(n)}</option>`).join('')
+  const sel=document.getElementById('tr-f-dm'),cur=sel.value
+  sel.innerHTML='<option value="">🔽 DM ทั้งหมด</option>'+all.map(n=>`<option>${esc(n)}</option>`).join('')
+  sel.value=cur
 }
 
 const TR_ROW_STYLE={
