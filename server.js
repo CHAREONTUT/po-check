@@ -224,6 +224,121 @@ app.delete('/api/employees/:rowIdx',auth,async(req,res)=>{
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 
+// EMP_PO / EMP_PO_ITEMS — new Employee/Department/PO module. Separate sheets from PO_MASTER/PO_EMPLOYEES; never touch those.
+app.get('/api/emp-po',auth,async(req,res)=>{
+  try{res.json({ok:true,data:await readSheet('EMP_PO!A2:I')})}
+  catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.get('/api/emp-po-items',auth,async(req,res)=>{
+  try{res.json({ok:true,data:await readSheet('EMP_PO_ITEMS!A2:G')})}
+  catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.get('/api/emp-employees',auth,async(req,res)=>{
+  try{res.json({ok:true,data:await readSheet('EMPLOYEES!A2:G')})}
+  catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.get('/api/emp-departments',auth,async(req,res)=>{
+  try{res.json({ok:true,data:await readSheet('DEPARTMENTS!A2:E')})}
+  catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.patch('/api/emp-po/:poNo/status',auth,async(req,res)=>{
+  try{
+    const rows=await readSheet('EMP_PO!A2:I')
+    const i=rows.findIndex(r=>r[0]===req.params.poNo)
+    if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบ PO'})
+    const row=rows[i]
+    const newStatus=row[6]==='Approved'?'Waiting':'Approved'
+    const updated=[...row];updated[6]=newStatus
+    await updateRow('EMP_PO',i+2,updated.slice(0,9))
+    await log(req.user,'EMP_PO_STATUS',`เปลี่ยนสถานะ PO ${req.params.poNo} เป็น ${newStatus}`)
+    res.json({ok:true,status:newStatus})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.post('/api/emp-departments',auth,async(req,res)=>{
+  try{
+    const{name,head}=req.body
+    if(!name) return res.status(400).json({ok:false,error:'กรุณาระบุชื่อแผนก'})
+    const id='DEPT'+Date.now()
+    await appendRow('DEPARTMENTS',[id,name,head||'',req.user.name,new Date().toLocaleString('th-TH')])
+    await log(req.user,'CREATE_EMP_DEPT',`สร้างแผนก ${name}`)
+    res.json({ok:true,id})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.patch('/api/emp-employees/:id/department',auth,async(req,res)=>{
+  try{
+    const{departmentId}=req.body
+    const rows=await readSheet('EMPLOYEES!A2:G')
+    const i=rows.findIndex(r=>r[0]===req.params.id)
+    if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบพนักงาน'})
+    const updated=[...rows[i]];updated[2]=departmentId||''
+    await updateRow('EMPLOYEES',i+2,updated.slice(0,7))
+    await log(req.user,'EMP_SET_DEPT',`ย้าย ${req.params.id} เข้าแผนก ${departmentId}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.patch('/api/emp-employees/:id/resign',auth,async(req,res)=>{
+  try{
+    const{month}=req.body
+    if(!month) return res.status(400).json({ok:false,error:'กรุณาระบุเดือนที่ลาออก'})
+    const rows=await readSheet('EMPLOYEES!A2:G')
+    const i=rows.findIndex(r=>r[0]===req.params.id)
+    if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบพนักงาน'})
+    const updated=[...rows[i]];updated[3]='Resigned';updated[4]=month
+    await updateRow('EMPLOYEES',i+2,updated.slice(0,7))
+    await log(req.user,'EMP_RESIGN',`บันทึกลาออก ${req.params.id} มีผล ${month}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.post('/api/emp-employees/bulk',auth,async(req,res)=>{
+  try{
+    const{rows}=req.body
+    if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
+    const str=v=>(v===null||v===undefined)?'':String(v).trim()
+    const[existing,depts]=await Promise.all([readSheet('EMPLOYEES!A2:A'),readSheet('DEPARTMENTS!A2:E')])
+    const existingIds=new Set(existing.map(r=>str(r[0])).filter(Boolean))
+    const now=new Date().toLocaleString('th-TH')
+    const newRows=[];const skippedIds=[]
+    for(const r of rows){
+      const id=str(r['Employee ID']??r['EmployeeID']??r['employee id']??'')
+      if(!id) continue
+      if(existingIds.has(id)){skippedIds.push(id);continue}
+      const name=str(r['ชื่อ-นามสกุล']??r['Name']??r['name']??'')
+      const deptName=str(r['แผนก']??r['Department']??r['department']??'')
+      const dept=depts.find(d=>str(d[1]).toLowerCase()===deptName.toLowerCase())
+      const status=str(r['สถานะ']??r['Status']??'Active')||'Active'
+      newRows.push([id,name,dept?dept[0]:'',status,'',req.user.name,now])
+      existingIds.add(id)
+    }
+    if(newRows.length){
+      const sheets=google.sheets({version:'v4',auth:ga()})
+      await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'EMPLOYEES!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newRows}})
+    }
+    await log(req.user,'EMP_BULK_IMPORT',`นำเข้าพนักงาน: เพิ่ม ${newRows.length} ข้าม (ซ้ำ) ${skippedIds.length}`)
+    res.json({ok:true,added:newRows.length,skipped:skippedIds.length,skippedIds})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.post('/api/emp-po',auth,async(req,res)=>{
+  try{
+    const{poNo,client,departmentId,startDate,endDate,expireDate,items}=req.body
+    if(!poNo) return res.status(400).json({ok:false,error:'กรุณากรอกเลขที่ PO'})
+    if(!items||!items.length||!items.some(it=>it.employeeId&&it.start&&it.end)) return res.status(400).json({ok:false,error:'กรุณาเพิ่มพนักงานอย่างน้อย 1 คน พร้อมวันที่ให้ครบ'})
+    const existing=await readSheet('EMP_PO!A2:A')
+    if(existing.some(r=>r[0]===poNo)) return res.status(400).json({ok:false,error:'มีเลขที่ PO นี้อยู่แล้ว'})
+    const now=new Date().toLocaleString('th-TH')
+    await appendRow('EMP_PO',[poNo,client||'',departmentId||'',startDate||'',endDate||'',expireDate||'','Waiting',req.user.name,now])
+    const emps=await readSheet('EMPLOYEES!A2:G')
+    const empName=id=>{const e=emps.find(x=>x[0]===id);return e?e[1]:''}
+    const validItems=items.filter(it=>it.employeeId&&it.start&&it.end)
+    const itemRows=validItems.map(it=>[poNo,it.employeeId,empName(it.employeeId),it.start,it.end,req.user.name,now])
+    if(itemRows.length){
+      const sheets=google.sheets({version:'v4',auth:ga()})
+      await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'EMP_PO_ITEMS!A1',valueInputOption:'USER_ENTERED',requestBody:{values:itemRows}})
+    }
+    await log(req.user,'CREATE_EMP_PO',`สร้าง PO ${poNo} (${itemRows.length} คน)`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+
 // BULK UPLOAD
 app.post('/api/po/bulk',auth,async(req,res)=>{
   try{

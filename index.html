@@ -61,7 +61,7 @@ body{font-family:'Fira Sans','Sarabun',sans-serif;background:var(--bg);color:var
 .btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#F43F5E);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
-.stat-card{background:var(--card);border-radius:16px;padding:18px 18px 14px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer}
+.stat-card{background:var(--card);border-radius:16px;padding:18px 18px 14px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer;font:inherit;text-align:left;width:100%;color:inherit}
 .stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .sc-blue::before{background:linear-gradient(90deg,#C2570F,#F2B77E)}
@@ -115,6 +115,30 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
 .t-red{background:#FFF1F2;color:#BE123C}
 .t-green{background:#D1FAE5;color:#065F46}
 .t-blue{background:#FDECDC;color:#A8460B}
+.t-gray{background:#F1F2F4;color:#4B5563}
+
+/* EMP_PO module (Dashboard tiles, Departments list, PO cards, Acceptance) */
+.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
+.stats-emp{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.stat-card.selected{box-shadow:0 0 0 2px var(--blue) inset}
+.deptlist{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden}
+.deptrow{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border:none;border-bottom:1px solid var(--border);background:var(--card);color:var(--text);text-align:left;cursor:pointer;font:inherit}
+.deptrow:last-child{border-bottom:none}
+.deptrow:hover{background:#FDF6EC}
+.deptrow.selected{background:#FDECDC}
+.deptrow .rname{font-weight:700;font-size:14px}
+.deptrow .chev{color:var(--muted);flex:none;transition:transform .12s}
+.deptrow.selected .chev{color:var(--blue);transform:rotate(90deg)}
+.pocard{border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.pocard .po-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:#FDF6EC;flex-wrap:wrap}
+.pocard .po-id{font-weight:700;font-family:ui-monospace,monospace}
+.pocard .po-meta{color:var(--muted);font-size:12px;margin-top:2px}
+.po-item-row{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-top:1px solid var(--border);font-size:13px;gap:10px}
+.po-item-row .emp{display:flex;flex-direction:column}
+.po-item-row .emp .n{font-weight:600}
+.po-item-row .emp .d{font-size:11.5px;color:var(--muted)}
+.po-item-row .range{font-family:ui-monospace,monospace;font-size:12px;color:var(--muted)}
+.item-row-edit{display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:8px;align-items:end;padding:8px;background:#FDF6EC;border-radius:9px;margin-bottom:8px}
 .al-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F5E9D6}
 .al-row:last-child{border-bottom:none}
 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -236,6 +260,12 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <div class="nav-sec">Admin</div>
     <button class="nav-item" onclick="nav('po-form',this)">➕ เพิ่ม PO</button>
     <button class="nav-item" onclick="nav('bulk',this)">📤 Bulk Upload</button>
+    <div class="nav-sec">พนักงาน & PO (ใหม่)</div>
+    <button class="nav-item" onclick="nav('emp-dash',this);loadEmpDash()">⊞ Dashboard (พนักงาน)</button>
+    <button class="nav-item" onclick="nav('emp-list',this);loadEmpEmployees()">👥 พนักงาน</button>
+    <button class="nav-item" onclick="nav('emp-dept',this);loadEmpDept()">🏢 แผนก</button>
+    <button class="nav-item" onclick="nav('emp-po-mgmt',this);loadEmpPOMgmt()">📄 PO Management</button>
+    <button class="nav-item" onclick="nav('emp-po',this);loadEmpPO()">✅ Acceptance by Por</button>
     <button class="logout-btn" onclick="doLogout()">🚪 ออกจากระบบ</button>
   </aside>
 
@@ -509,6 +539,72 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
       </div>
     </div>
 
+    <!-- EMP DASHBOARD -->
+    <div class="page" id="page-emp-dash">
+      <div class="topbar">
+        <div><div class="page-title">⊞ Dashboard (พนักงาน & PO)</div><div class="page-sub">ภาพรวมสถานะพนักงานและ PO รายเดือน</div></div>
+        <div class="topbar-right">
+          <input class="fi2" id="empdash-month" type="month" style="width:150px;padding:8px 12px;font-size:13px" onchange="renderEmpDash()">
+        </div>
+      </div>
+      <div class="stats-emp" id="empdash-tiles"></div>
+      <div id="empdash-detail"></div>
+    </div>
+
+    <!-- EMPLOYEES LIST -->
+    <div class="page" id="page-emp-list">
+      <div class="topbar">
+        <div><div class="page-title">👥 พนักงาน</div><div class="page-sub">ข้อมูลพนักงานจากชีต EMPLOYEES</div></div>
+        <div class="topbar-right">
+          <input class="fi2" id="empl-month" type="month" style="width:150px;padding:8px 12px;font-size:13px" onchange="renderEmpListT()">
+          <select class="fi2" id="empl-dept" style="width:160px;padding:8px 12px;font-size:13px" onchange="renderEmpListT()"><option value="">ทุกแผนก</option></select>
+          <select class="fi2" id="empl-status" style="width:130px;padding:8px 12px;font-size:13px" onchange="renderEmpListT()">
+            <option value="">ทุกสถานะ</option><option value="active">Active</option><option value="resigned">Resigned</option>
+          </select>
+          <button class="btn btn-primary" onclick="openEmpImport()">📥 นำเข้าพนักงาน (Excel)</button>
+        </div>
+      </div>
+      <div class="s-wrap"><input class="s-in" id="empl-s" placeholder="ค้นหาชื่อหรือ Employee ID..." oninput="renderEmpListT()"></div>
+      <div class="card"><div class="tbl-wrap">
+        <table><thead><tr><th style="padding-left:14px">Employee ID</th><th>ชื่อ-นามสกุล</th><th>แผนก</th><th>สถานะ</th><th>PO เดือนที่เลือก</th><th>จัดการ</th></tr></thead>
+        <tbody id="empl-tbody"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- DEPARTMENTS -->
+    <div class="page" id="page-emp-dept">
+      <div class="topbar">
+        <div><div class="page-title">🏢 แผนก</div><div class="page-sub">จัดการแผนกและสมาชิก</div></div>
+        <div class="topbar-right">
+          <input class="fi2" id="empdept-exportmonth" type="month" style="width:150px;padding:8px 12px;font-size:13px" title="เดือนที่ต้องการส่งออก">
+          <button class="btn btn-green" onclick="exportEmpDept(null)">↓ ดาวน์โหลดทั้งหมด (Excel)</button>
+          <button class="btn btn-primary" onclick="openEmpDeptCreate()">+ สร้างแผนก</button>
+        </div>
+      </div>
+      <div class="s-wrap"><input class="s-in" id="empdept-s" placeholder="ค้นหาแผนก / หัวหน้าแผนก..." oninput="renderEmpDeptList()"></div>
+      <div class="deptlist" id="empdept-list"></div>
+      <div id="empdept-detail" style="margin-top:16px"></div>
+    </div>
+
+    <!-- PO MANAGEMENT (new module) -->
+    <div class="page" id="page-emp-po-mgmt">
+      <div class="topbar">
+        <div><div class="page-title">📄 PO Management</div><div class="page-sub">สร้างและติดตามใบ PO (โมดูลพนักงานใหม่)</div></div>
+        <div class="topbar-right"><button class="btn btn-primary" onclick="openEmpPOCreate()">+ สร้าง PO</button></div>
+      </div>
+      <div class="s-wrap"><input class="s-in" id="empmgmt-s" placeholder="ค้นหาเลขที่ PO..." oninput="renderEmpPOMgmtList()"></div>
+      <div id="empmgmt-list"></div>
+    </div>
+
+    <!-- EMP_PO (new Employee/Department/PO module — separate sheets, not PO_MASTER/PO_EMPLOYEES) -->
+    <div class="page" id="page-emp-po">
+      <div class="topbar">
+        <div><div class="page-title">✅ Acceptance by Por</div><div class="page-sub">เลือกแผนก (คลิกชื่อหัวหน้าแผนก) เพื่อดู PO ของแผนกนั้น แล้วกด Approve เพื่ออนุมัติทั้งใบ</div></div>
+      </div>
+      <div class="deptlist" id="emppo-dept-list"></div>
+      <div id="emppo-po-list" style="margin-top:16px"></div>
+    </div>
+
     <!-- EAS PENDING -->
     <div class="page" id="page-eas-pending">
       <div class="topbar">
@@ -679,6 +775,93 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
   </div>
 </div></div>
 
+<!-- MODAL: Employee resign -->
+<div class="mbg" id="m-emp-resign"><div class="modal" style="max-width:400px">
+  <div class="modal-hdr"><div class="modal-title">📤 บันทึกลาออก</div><button class="modal-x" onclick="closeM('m-emp-resign')">✕</button></div>
+  <div class="modal-body">
+    <div style="font-weight:700;margin-bottom:14px" id="emp-resign-name"></div>
+    <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">เดือนที่ลาออก (มีผลตั้งแต่เดือนนี้เป็นต้นไป)</label>
+    <input class="fi2" type="month" id="emp-resign-month" style="width:100%;margin-bottom:16px">
+    <div style="display:flex;gap:10px"><button class="btn btn-red" onclick="confirmEmpResign()">ยืนยันลาออก</button><button class="btn btn-ghost" onclick="closeM('m-emp-resign')">ยกเลิก</button></div>
+  </div>
+</div></div>
+
+<!-- MODAL: Employee bulk import -->
+<div class="mbg" id="m-emp-import"><div class="modal" style="max-width:560px">
+  <div class="modal-hdr"><div class="modal-title">📥 นำเข้าพนักงาน (Excel)</div><button class="modal-x" onclick="closeM('m-emp-import')">✕</button></div>
+  <div class="modal-body">
+    <div style="background:#FDECDC;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#A8460B;line-height:1.8">
+      📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
+      <strong>Employee ID | ชื่อ-นามสกุล | แผนก | สถานะ</strong><br>
+      <span style="color:var(--muted);font-size:12px">• Employee ID ต้องมาจากระบบ HR/เงินเดือน ห้ามสร้างใหม่เอง<br>
+      • Employee ID ที่มีอยู่แล้วในระบบจะถูกข้าม (ไม่ทับข้อมูลเดิม)<br>
+      • แผนก (ถ้ามี) ต้องตรงกับชื่อแผนกที่สร้างไว้แล้ว ไม่ตรงจะเว้นว่างไว้ก่อน</span>
+    </div>
+    <div class="upload-zone" onclick="document.getElementById('emp-import-file').click()">
+      <input type="file" id="emp-import-file" accept=".xlsx,.xls,.csv" onchange="handleEmpImportFile(event)">
+      <div class="upload-icon">📂</div>
+      <div class="upload-hint">คลิกหรือลากไฟล์ Excel มาวางที่นี่<br><strong>.xlsx / .xls / .csv</strong></div>
+    </div>
+    <div id="emp-import-preview" style="margin-top:16px;display:none">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="emp-import-preview-title"></div>
+      <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+        <table><thead><tr><th>Employee ID</th><th>ชื่อ-นามสกุล</th><th>แผนก</th><th>สถานะ</th></tr></thead>
+        <tbody id="emp-import-preview-body"></tbody></table>
+      </div>
+      <button class="btn btn-primary" onclick="submitEmpImport()" style="margin-top:14px">📥 นำเข้าข้อมูล</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODAL: Create department -->
+<div class="mbg" id="m-emp-dept-create"><div class="modal" style="max-width:420px">
+  <div class="modal-hdr"><div class="modal-title">🏢 สร้างแผนกใหม่</div><button class="modal-x" onclick="closeM('m-emp-dept-create')">✕</button></div>
+  <div class="modal-body">
+    <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">ชื่อแผนก</label>
+    <input class="fi2" type="text" id="emp-dept-name" placeholder="เช่น ฝ่ายผลิต" style="width:100%;margin-bottom:14px">
+    <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">หัวหน้าแผนก</label>
+    <input class="fi2" type="text" id="emp-dept-head" placeholder="ชื่อ-นามสกุล" style="width:100%;margin-bottom:16px">
+    <div style="display:flex;gap:10px"><button class="btn btn-primary" onclick="saveEmpDeptCreate()">สร้างแผนก</button><button class="btn btn-ghost" onclick="closeM('m-emp-dept-create')">ยกเลิก</button></div>
+  </div>
+</div></div>
+
+<!-- MODAL: Add employee to department -->
+<div class="mbg" id="m-emp-dept-add"><div class="modal" style="max-width:420px">
+  <div class="modal-hdr"><div class="modal-title" id="emp-dept-add-title">เพิ่มพนักงานเข้าแผนก</div><button class="modal-x" onclick="closeM('m-emp-dept-add')">✕</button></div>
+  <div class="modal-body">
+    <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">ค้นหาด้วย Employee ID</label>
+    <input class="fi2" type="text" id="emp-dept-add-input" list="empDatalist" placeholder="เช่น CT68742" style="width:100%;margin-bottom:8px">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">พิมพ์รหัสหรือเลือกจากรายการ แล้วกด "เพิ่มเข้าแผนก"</div>
+    <div style="display:flex;gap:10px"><button class="btn btn-primary" onclick="saveEmpDeptAdd()">เพิ่มเข้าแผนก</button><button class="btn btn-ghost" onclick="closeM('m-emp-dept-add')">ยกเลิก</button></div>
+  </div>
+</div></div>
+
+<!-- MODAL: Create PO (new module) -->
+<div class="mbg" id="m-emp-po-create"><div class="modal" style="max-width:640px">
+  <div class="modal-hdr"><div class="modal-title">📄 สร้าง PO ใหม่</div><button class="modal-x" onclick="closeM('m-emp-po-create')">✕</button></div>
+  <div class="modal-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">เลขที่ PO</label><input class="fi2" type="text" id="emp-po-no" style="width:100%"></div>
+      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">ชื่อลูกค้า</label><input class="fi2" type="text" id="emp-po-client" style="width:100%"></div>
+    </div>
+    <div style="margin-bottom:10px"><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">แผนก (ถ้ามี)</label><select class="fi2" id="emp-po-dept" style="width:100%"><option value="">— ไม่ระบุ —</option></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันเริ่มต้น</label><input class="fi2" type="date" id="emp-po-start" style="width:100%"></div>
+      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันสิ้นสุด</label><input class="fi2" type="date" id="emp-po-end" style="width:100%"></div>
+      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันหมดอายุ</label><input class="fi2" type="date" id="emp-po-expire" style="width:100%"></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:13px">พนักงานใน PO นี้</strong>
+        <button type="button" class="btn btn-sm" onclick="addEmpPOItemRow()">+ เพิ่มพนักงาน</button>
+      </div>
+      <div id="emp-po-item-rows"></div>
+      <div style="font-size:11.5px;color:var(--muted)">* พนักงานคนเดียวกันใส่ซ้ำได้หลายแถว โดยระบุช่วงวันที่ต่างกัน (เช่น PO เก่าหมดกลางเดือน)</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-primary" onclick="saveEmpPOCreate()">สร้าง PO</button><button class="btn btn-ghost" onclick="closeM('m-emp-po-create')">ยกเลิก</button></div>
+  </div>
+</div></div>
+
 <!-- MODAL: Edit OT -->
 <div class="mbg" id="m-ot-edit"><div class="modal" style="max-width:460px">
   <div class="modal-hdr"><div class="modal-title">✏️ แก้ไขล่วงเวลาทำงาน</div><button class="modal-x" onclick="closeM('m-ot-edit')">✕</button></div>
@@ -843,6 +1026,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
 </div></div>
 
 <div class="toast" id="toast"></div>
+<datalist id="empDatalist"></datalist>
 
 <script>
 const XLSX_SCRIPT='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
@@ -1021,6 +1205,420 @@ function renderPOT(){
         <button class="btn btn-red btn-sm" onclick="askDel('${r[0]}')">🗑️</button>
       </div></td></tr>`}).join('')
   :`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">ยังไม่มีข้อมูล</td></tr>`
+}
+
+// EMP_PO (new Employee/Department/PO module — separate sheets EMP_PO/EMP_PO_ITEMS/EMPLOYEES/DEPARTMENTS, never PO_MASTER/PO_EMPLOYEES)
+let C_EMPPO=[],C_EMPPO_ITEMS=[],C_EMPLOYEES=[],C_EMPDEPT=[]
+async function fetchEmpModuleData(){
+  const[po,items,emps,depts]=await Promise.all([
+    api('GET','/api/emp-po'),api('GET','/api/emp-po-items'),
+    api('GET','/api/emp-employees'),api('GET','/api/emp-departments')
+  ])
+  C_EMPPO=po.data||[];C_EMPPO_ITEMS=items.data||[];C_EMPLOYEES=emps.data||[];C_EMPDEPT=depts.data||[]
+  refreshEmpDatalist()
+}
+function empDeptName(id){const d=C_EMPDEPT.find(x=>x[0]===id);return d?d[1]:''}
+function empById(id){return C_EMPLOYEES.find(e=>e[0]===id)}
+function refreshEmpDatalist(){
+  document.getElementById('empDatalist').innerHTML=C_EMPLOYEES.map(e=>`<option value="${esc(e[0])} — ${esc(e[1]||'')}">`).join('')
+}
+function parseEmpInput(val){
+  if(!val) return null
+  const id=val.split(' — ')[0].trim()
+  return empById(id)?id:null
+}
+function empPONumbers(empId){
+  const nums=[]
+  C_EMPPO_ITEMS.forEach(it=>{ if(it[1]===empId && nums.indexOf(it[0])===-1) nums.push(it[0]) })
+  return nums
+}
+function monthsFromTo(startM,endM){
+  const out=[];let[y,m]=startM.split('-').map(Number)
+  while(y+'-'+String(m).padStart(2,'0')<=endM){ out.push(y+'-'+String(m).padStart(2,'0')); m++; if(m>12){m=1;y++} }
+  return out
+}
+function currentMonthKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0') }
+function employeeStatusAtMonth(emp,month){ return (emp[4] && month>=emp[4]) ? 'resigned' : 'active' }
+function rangeOverlapsMonth(start,end,month){
+  const mStart=month+'-01'
+  const[y,m]=month.split('-').map(Number)
+  const mEnd=month+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0')
+  return (start||'')<=mEnd && (!end || end>=mStart)
+}
+function poItemsForEmpMonth(empId,month){
+  const out=[]
+  C_EMPPO_ITEMS.forEach(it=>{
+    if(it[1]===empId && rangeOverlapsMonth(it[3],it[4],month)){
+      const po=C_EMPPO.find(p=>p[0]===it[0])
+      if(po) out.push({po,item:it})
+    }
+  })
+  return out
+}
+function fmtDateShort(d){ if(!d) return '—'; const p=d.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0].slice(2) : d }
+function empPOCardHTML(po,highlightDeptId){
+  const items=C_EMPPO_ITEMS.filter(it=>it[0]===po[0])
+  const approved=po[6]==='Approved'
+  const itemsHTML=items.map(it=>{
+    const emp=empById(it[1])
+    const dim=highlightDeptId && emp && emp[2]!==highlightDeptId
+    return `<div class="po-item-row"${dim?' style="opacity:.45"':''}>
+      <div class="emp"><span class="n">${esc(emp?emp[1]:(it[2]||it[1]||''))}</span><span class="d mono">${esc(it[1]||'')} · ${esc(emp?empDeptName(emp[2]):'')}</span></div>
+      <div class="range mono">${fmtDateShort(it[3])} – ${fmtDateShort(it[4])}</div>
+    </div>`
+  }).join('')
+  return `<div class="pocard">
+    <div class="po-top">
+      <div><div class="po-id mono">${esc(po[0]||'')}</div><div class="po-meta">${esc(po[1]||'ไม่ระบุลูกค้า')} · ${fmtDateShort(po[3])} – ${fmtDateShort(po[4])}${po[5]?' · หมดอายุ '+fmtDateShort(po[5]):''} · ${items.length} รายการ</div></div>
+      <button class="btn ${approved?'btn-amber':'btn-green'} btn-sm" onclick="toggleEmpPOStatus('${po[0]}')">${approved?'↩️ Wait Team Leader':'✅ Approve'}</button>
+    </div>
+    <div class="po-items">${itemsHTML||'<div style="padding:10px 16px;font-size:12px;color:var(--muted)">ไม่มีพนักงานใน PO นี้</div>'}</div>
+  </div>`
+}
+// ---- Dashboard ----
+let empDashDetail='missing'
+async function loadEmpDash(){
+  await fetchEmpModuleData()
+  const el=document.getElementById('empdash-month')
+  if(!el.value) el.value=currentMonthKey()
+  renderEmpDash()
+}
+function renderEmpDash(){
+  const month=document.getElementById('empdash-month').value||currentMonthKey()
+  const active=C_EMPLOYEES.filter(e=>employeeStatusAtMonth(e,month)==='active')
+  const monthPOs=C_EMPPO.filter(po=>po[3]&&rangeOverlapsMonth(po[3],po[4],month))
+  const approvedList=monthPOs.filter(po=>po[6]==='Approved')
+  const waitingList=monthPOs.filter(po=>po[6]!=='Approved')
+
+  const yearStart=month.slice(0,4)+'-01'
+  const ytdMonths=monthsFromTo(yearStart,month)
+  const missingRows=[]
+  active.forEach(e=>{
+    const gaps=ytdMonths.filter(m=>employeeStatusAtMonth(e,m)==='active'&&poItemsForEmpMonth(e[0],m).length===0)
+    if(gaps.length) missingRows.push({emp:e,gaps})
+  })
+
+  function tile(key,cls,icon,num,label){
+    return `<button type="button" class="stat-card ${cls}${empDashDetail===key?' selected':''}" onclick="empDashDetail='${key}';renderEmpDash()">
+      <div class="stat-icon">${icon}</div>
+      <div class="stat-num">${num}</div><div class="stat-label">${esc(label)}</div><div class="stat-hint">คลิกดูรายละเอียด →</div>
+    </button>`
+  }
+  document.getElementById('empdash-tiles').innerHTML=
+    tile('active','sc-blue','👥',active.length,`พนักงาน Active (${month})`)+
+    tile('missing','sc-coral','⚠️',missingRows.length,'ไม่มี PO เลย (1 ม.ค. – ปัจจุบัน)')+
+    tile('approved','sc-teal','✅',approvedList.length,'PO อนุมัติแล้ว (เดือนนี้)')+
+    tile('waiting','sc-amber','⏳',waitingList.length,'PO รออนุมัติ (เดือนนี้)')
+
+  let html=''
+  if(empDashDetail==='active'){
+    html+=`<div class="card"><div class="tbl-wrap"><table><thead><tr><th style="padding-left:14px">Employee ID</th><th>ชื่อ-นามสกุล</th><th>แผนก</th><th>PO เดือนนี้</th></tr></thead><tbody>`
+    html+=active.length?active.map(e=>{
+      const n=poItemsForEmpMonth(e[0],month).length
+      return `<tr><td class="mono" style="padding-left:14px">${esc(e[0])}</td><td>${esc(e[1])}</td><td>${esc(empDeptName(e[2])||'—')}</td><td class="mono">${n?n+' PO':'<span style="color:#BE123C">ไม่มี</span>'}</td></tr>`
+    }).join(''):`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">ไม่มีพนักงาน Active</td></tr>`
+    html+=`</tbody></table></div></div>`
+  }else if(empDashDetail==='missing'){
+    html+=`<div class="card"><div class="tbl-wrap"><table><thead><tr><th style="padding-left:14px">Employee ID</th><th>ชื่อ-นามสกุล</th><th>แผนก</th><th>จำนวนเดือนที่ขาด</th><th>เดือนที่ไม่มี PO</th></tr></thead><tbody>`
+    html+=missingRows.length?missingRows.slice().sort((a,b)=>b.gaps.length-a.gaps.length).map(r=>
+      `<tr><td class="mono" style="padding-left:14px">${esc(r.emp[0])}</td><td>${esc(r.emp[1])}</td><td>${esc(empDeptName(r.emp[2])||'—')}</td><td class="mono">${r.gaps.length}</td><td style="font-size:12px">${r.gaps.join(', ')}</td></tr>`
+    ).join(''):`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">ทุกคนมี PO ครบตั้งแต่ต้นปีจนถึงปัจจุบัน 🎉</td></tr>`
+    html+=`</tbody></table></div></div>`
+  }else if(empDashDetail==='approved'||empDashDetail==='waiting'){
+    const list=empDashDetail==='approved'?approvedList:waitingList
+    html+=`<div class="card" style="padding:16px">`+
+      (list.length?list.map(po=>empPOCardHTML(po,null)).join(''):`<div style="text-align:center;padding:24px;color:var(--muted)">ไม่มี PO ในสถานะนี้สำหรับเดือนนี้</div>`)+
+    `</div>`
+  }
+  document.getElementById('empdash-detail').innerHTML=html
+}
+// ---- Employees list ----
+async function loadEmpEmployees(){
+  await fetchEmpModuleData()
+  const dsel=document.getElementById('empl-dept')
+  dsel.innerHTML='<option value="">ทุกแผนก</option>'+C_EMPDEPT.map(d=>`<option value="${esc(d[0])}">${esc(d[1]||d[0])}</option>`).join('')
+  const mEl=document.getElementById('empl-month')
+  if(!mEl.value) mEl.value=currentMonthKey()
+  renderEmpListT()
+}
+function renderEmpListT(){
+  const f=(document.getElementById('empl-s').value||'').toLowerCase()
+  const deptId=document.getElementById('empl-dept').value||''
+  const statusF=document.getElementById('empl-status').value||''
+  const month=document.getElementById('empl-month').value||currentMonthKey()
+  const rows=C_EMPLOYEES.filter(e=>{
+    if(deptId&&e[2]!==deptId) return false
+    const st=e[3]==='Resigned'?'resigned':'active'
+    if(statusF&&st!==statusF) return false
+    if(f&&(e[0]||'').toLowerCase().indexOf(f)===-1&&(e[1]||'').toLowerCase().indexOf(f)===-1) return false
+    return true
+  })
+  document.getElementById('empl-tbody').innerHTML=rows.length?rows.map(e=>{
+    const resigned=e[3]==='Resigned'
+    const n=poItemsForEmpMonth(e[0],month).length
+    return `<tr>
+      <td class="mono" style="padding-left:14px">${esc(e[0])}</td>
+      <td>${esc(e[1]||'')}</td>
+      <td>${esc(empDeptName(e[2])||'—')}</td>
+      <td>${resigned?`<span class="tag t-gray">Resigned${e[4]?' '+esc(e[4]):''}</span>`:`<span class="tag t-green">Active</span>`}</td>
+      <td class="mono">${n} PO</td>
+      <td>${resigned?'':`<button class="btn btn-red btn-sm" onclick="openEmpResign('${e[0]}')">ลาออก</button>`}</td>
+    </tr>`
+  }).join(''):`<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">ไม่พบพนักงานตามเงื่อนไขที่เลือก</td></tr>`
+}
+let EMP_RESIGN_TARGET=null
+function openEmpResign(id){
+  EMP_RESIGN_TARGET=id
+  const e=empById(id)
+  document.getElementById('emp-resign-name').textContent=id+' — '+(e?e[1]:'')
+  document.getElementById('emp-resign-month').value=''
+  document.getElementById('m-emp-resign').classList.add('show')
+}
+async function confirmEmpResign(){
+  const month=document.getElementById('emp-resign-month').value
+  if(!month){toast('กรุณาเลือกเดือนที่ลาออก','error');return}
+  const r=await api('PATCH',`/api/emp-employees/${enc(EMP_RESIGN_TARGET)}/resign`,{month})
+  if(r.ok){closeM('m-emp-resign');toast('บันทึกลาออกแล้ว','success');loadEmpEmployees()}
+  else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+function openEmpImport(){
+  EMP_IMPORT_DATA=[]
+  document.getElementById('emp-import-file').value=''
+  document.getElementById('emp-import-preview').style.display='none'
+  document.getElementById('m-emp-import').classList.add('show')
+}
+let EMP_IMPORT_DATA=[]
+function handleEmpImportFile(e){const f=e.target.files[0];if(f)processEmpImport(f)}
+function processEmpImport(file){
+  loadXLSX(()=>{
+    const reader=new FileReader()
+    reader.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:'array'})
+      const ws=wb.Sheets[wb.SheetNames[0]]
+      let headerRow=0
+      const range=XLSX.utils.decode_range(ws['!ref']||'A1:F10')
+      for(let r=0;r<=Math.min(5,range.e.r);r++){
+        let txt=''
+        for(let c=0;c<=5;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell)txt+=String(cell.v||'').trim()+' '}
+        if(txt.includes('Employee ID')||txt.includes('ชื่อ')){headerRow=r;break}
+      }
+      const data=XLSX.utils.sheet_to_json(ws,{defval:'',range:headerRow})
+      const norm=data.map(row=>{const nr={};for(const[k,v]of Object.entries(row))nr[String(k).trim()]=v;return nr})
+      EMP_IMPORT_DATA=norm
+      document.getElementById('emp-import-preview-body').innerHTML=norm.slice(0,10).map(r=>`<tr>
+        <td style="font-weight:600;color:var(--blue)">${esc(r['Employee ID']||'')}</td>
+        <td>${esc(r['ชื่อ-นามสกุล']||r['Name']||'')}</td>
+        <td>${esc(r['แผนก']||r['Department']||'')}</td>
+        <td>${esc(r['สถานะ']||r['Status']||'')}</td>
+      </tr>`).join('')
+      document.getElementById('emp-import-preview-title').textContent=`พบ ${norm.length} แถว (แสดง 10 แรก)`
+      document.getElementById('emp-import-preview').style.display=''
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+async function submitEmpImport(){
+  if(!EMP_IMPORT_DATA.length){toast('ไม่มีข้อมูล','error');return}
+  const r=await api('POST','/api/emp-employees/bulk',{rows:EMP_IMPORT_DATA})
+  if(r.ok){
+    const skipMsg=r.skipped?` · ข้าม ${r.skipped} คน (ซ้ำ: ${(r.skippedIds||[]).slice(0,5).join(', ')}${r.skippedIds&&r.skippedIds.length>5?'…':''})`:''
+    toast(`นำเข้าสำเร็จ: เพิ่ม ${r.added} คน${skipMsg}`,'success')
+    closeM('m-emp-import');loadEmpEmployees()
+  }else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+// ---- Departments ----
+let empDeptSelected=null
+async function loadEmpDept(){
+  await fetchEmpModuleData()
+  renderEmpDeptList()
+}
+function renderEmpDeptList(){
+  const q=(document.getElementById('empdept-s').value||'').toLowerCase()
+  const list=C_EMPDEPT.filter(d=>!q||(d[1]||'').toLowerCase().indexOf(q)>-1||(d[2]||'').toLowerCase().indexOf(q)>-1)
+  document.getElementById('empdept-list').innerHTML=list.length?list.map(d=>
+    `<button type="button" class="deptrow${empDeptSelected===d[0]?' selected':''}" onclick="selectEmpDept('${d[0]}')">
+      <span class="rname">${esc(d[1]||d[0])}</span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>`
+  ).join(''):`<div style="padding:24px;text-align:center;color:var(--muted)">ยังไม่มีแผนก — กด "+ สร้างแผนก" เพื่อเริ่มต้น</div>`
+  renderEmpDeptDetail()
+}
+function selectEmpDept(id){
+  empDeptSelected=(empDeptSelected===id)?null:id
+  renderEmpDeptList()
+}
+function renderEmpDeptDetail(){
+  const el=document.getElementById('empdept-detail')
+  if(!empDeptSelected){el.innerHTML='';return}
+  const dept=C_EMPDEPT.find(d=>d[0]===empDeptSelected)
+  if(!dept){el.innerHTML='';return}
+  const members=C_EMPLOYEES.filter(e=>e[2]===empDeptSelected)
+  let html=`<div class="card"><div class="topbar" style="border-bottom:1px solid var(--border)">
+    <div><div class="page-title" style="font-size:16px">${esc(dept[1]||'')}</div><div class="page-sub">หัวหน้า: ${esc(dept[2]||'—')}</div></div>
+    <div class="topbar-right">
+      <button class="btn btn-green btn-sm" onclick="exportEmpDept('${dept[0]}')">↓ ดาวน์โหลดแผนกนี้ (Excel)</button>
+      <button class="btn btn-primary btn-sm" onclick="openEmpDeptAdd('${dept[0]}')">+ เพิ่มพนักงาน</button>
+    </div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th style="padding-left:14px">Employee ID</th><th>ชื่อ-นามสกุล</th><th>สถานะ</th><th>เลข PO ที่เกี่ยวข้อง</th></tr></thead><tbody>`
+  html+=members.length?members.map(e=>{
+    const resigned=e[3]==='Resigned'
+    const nums=empPONumbers(e[0])
+    return `<tr><td class="mono" style="padding-left:14px">${esc(e[0])}</td><td>${esc(e[1]||'')}</td>
+      <td>${resigned?'<span class="tag t-gray">Resigned</span>':'<span class="tag t-green">Active</span>'}</td>
+      <td class="mono" style="font-size:12px">${nums.length?esc(nums.join(', ')):'<span style="color:var(--muted)">— ไม่มี PO —</span>'}</td></tr>`
+  }).join(''):`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">ยังไม่มีพนักงานในแผนกนี้</td></tr>`
+  html+='</tbody></table></div></div>'
+  el.innerHTML=html
+}
+function openEmpDeptCreate(){
+  document.getElementById('emp-dept-name').value=''
+  document.getElementById('emp-dept-head').value=''
+  document.getElementById('m-emp-dept-create').classList.add('show')
+}
+async function saveEmpDeptCreate(){
+  const name=document.getElementById('emp-dept-name').value.trim()
+  const head=document.getElementById('emp-dept-head').value.trim()
+  if(!name){toast('กรุณาระบุชื่อแผนก','error');return}
+  const r=await api('POST','/api/emp-departments',{name,head})
+  if(r.ok){
+    closeM('m-emp-dept-create');toast(`สร้างแผนก "${name}" แล้ว`,'success')
+    await loadEmpDept();empDeptSelected=r.id;renderEmpDeptList()
+  }else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+let EMP_DEPT_ADD_TARGET=null
+function openEmpDeptAdd(deptId){
+  EMP_DEPT_ADD_TARGET=deptId
+  document.getElementById('emp-dept-add-title').textContent='เพิ่มพนักงานเข้าแผนก '+empDeptName(deptId)
+  document.getElementById('emp-dept-add-input').value=''
+  document.getElementById('m-emp-dept-add').classList.add('show')
+}
+async function saveEmpDeptAdd(){
+  const id=parseEmpInput(document.getElementById('emp-dept-add-input').value)
+  if(!id){toast('ไม่พบ Employee ID นี้','error');return}
+  const r=await api('PATCH',`/api/emp-employees/${enc(id)}/department`,{departmentId:EMP_DEPT_ADD_TARGET})
+  if(r.ok){closeM('m-emp-dept-add');toast(`${id} ถูกเพิ่มเข้าแผนกแล้ว`,'success');await loadEmpDept();empDeptSelected=EMP_DEPT_ADD_TARGET;renderEmpDeptList()}
+  else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+function exportEmpDept(deptId){
+  const month=document.getElementById('empdept-exportmonth').value||''
+  const emps=C_EMPLOYEES.filter(e=>!deptId||e[2]===deptId)
+  if(!emps.length){toast('ไม่มีพนักงานที่จะ Export ตามเงื่อนไขที่เลือก','error');return}
+  const hdr=['Employee ID','ชื่อ-นามสกุล','แผนก','สถานะพนักงาน','เลข PO','เดือน PO','วันเริ่มต้น','วันสิ้นสุด','สถานะ PO']
+  const rows=[]
+  emps.forEach(e=>{
+    const items=C_EMPPO_ITEMS.filter(it=>it[1]===e[0]&&(!month||rangeOverlapsMonth(it[3],it[4],month)))
+    const resigned=e[3]==='Resigned'
+    if(!items.length){
+      rows.push([e[0],e[1]||'',empDeptName(e[2])||'',resigned?'Resigned':'Active','','','','','ไม่มี PO'])
+    }else{
+      items.forEach(it=>{
+        const po=C_EMPPO.find(p=>p[0]===it[0])
+        rows.push([e[0],e[1]||'',empDeptName(e[2])||'',resigned?'Resigned':'Active',it[0],it[3]?it[3].slice(0,7):'',it[3]||'',it[4]||'',po&&po[6]==='Approved'?'Approved':'Wait Team Leader'])
+      })
+    }
+  })
+  const deptLabel=deptId?(empDeptName(deptId)||deptId):'ทุกแผนก'
+  const monthLbl=month||'ทุกเดือน'
+  dlXLSX([hdr,...rows],`Dept_${deptLabel}_${monthLbl}_${today()}.xlsx`)
+  toast('Export สำเร็จ ✅','success')
+}
+// ---- PO Management ----
+async function loadEmpPOMgmt(){
+  await fetchEmpModuleData()
+  renderEmpPOMgmtList()
+}
+function renderEmpPOMgmtList(){
+  const q=(document.getElementById('empmgmt-s').value||'').toLowerCase()
+  const list=C_EMPPO.filter(po=>!q||(po[0]||'').toLowerCase().indexOf(q)>-1).slice().sort((a,b)=>a[0]<b[0]?-1:1)
+  document.getElementById('empmgmt-list').innerHTML=list.length?list.map(po=>empPOCardHTML(po,null)).join(''):`<div class="card" style="padding:24px;text-align:center;color:var(--muted)">ไม่พบ PO${q?' เลขที่ "'+esc(q)+'"':''}</div>`
+}
+let EMP_PO_DRAFT_ITEMS=[]
+function openEmpPOCreate(){
+  document.getElementById('emp-po-no').value=''
+  document.getElementById('emp-po-client').value=''
+  const dsel=document.getElementById('emp-po-dept')
+  dsel.innerHTML='<option value="">— ไม่ระบุ —</option>'+C_EMPDEPT.map(d=>`<option value="${esc(d[0])}">${esc(d[1]||d[0])}</option>`).join('')
+  document.getElementById('emp-po-start').value=''
+  document.getElementById('emp-po-end').value=''
+  document.getElementById('emp-po-expire').value=''
+  EMP_PO_DRAFT_ITEMS=[]
+  renderEmpPOItemRows()
+  document.getElementById('m-emp-po-create').classList.add('show')
+}
+function renderEmpPOItemRows(){
+  const wrap=document.getElementById('emp-po-item-rows')
+  wrap.innerHTML=EMP_PO_DRAFT_ITEMS.length?EMP_PO_DRAFT_ITEMS.map((row,i)=>`
+    <div class="item-row-edit">
+      <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Employee</label><input class="fi2" type="text" list="empDatalist" value="${esc(row.empLabel||'')}" style="width:100%" onchange="updateEmpPOItemDraft(${i},'emp',this.value)"></div>
+      <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">เริ่ม</label><input class="fi2" type="date" value="${esc(row.start||'')}" style="width:100%" onchange="updateEmpPOItemDraft(${i},'start',this.value)"></div>
+      <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">ถึง</label><input class="fi2" type="date" value="${esc(row.end||'')}" style="width:100%" onchange="updateEmpPOItemDraft(${i},'end',this.value)"></div>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="removeEmpPOItemRow(${i})">ลบ</button>
+    </div>`).join(''):'<div style="font-size:12px;color:var(--muted)">ยังไม่มีพนักงานในรายการ กด "+ เพิ่มพนักงาน"</div>'
+}
+function addEmpPOItemRow(){EMP_PO_DRAFT_ITEMS.push({empLabel:'',start:'',end:''});renderEmpPOItemRows()}
+function removeEmpPOItemRow(i){EMP_PO_DRAFT_ITEMS.splice(i,1);renderEmpPOItemRows()}
+function updateEmpPOItemDraft(i,field,val){
+  if(field==='emp')EMP_PO_DRAFT_ITEMS[i].empLabel=val
+  if(field==='start')EMP_PO_DRAFT_ITEMS[i].start=val
+  if(field==='end')EMP_PO_DRAFT_ITEMS[i].end=val
+}
+async function saveEmpPOCreate(){
+  const poNo=document.getElementById('emp-po-no').value.trim()
+  const client=document.getElementById('emp-po-client').value.trim()
+  const departmentId=document.getElementById('emp-po-dept').value
+  const startDate=document.getElementById('emp-po-start').value
+  const endDate=document.getElementById('emp-po-end').value
+  const expireDate=document.getElementById('emp-po-expire').value
+  if(!poNo){toast('กรุณากรอกเลขที่ PO','error');return}
+  const items=[]
+  EMP_PO_DRAFT_ITEMS.forEach(row=>{
+    const id=parseEmpInput(row.empLabel)
+    if(id&&row.start&&row.end) items.push({employeeId:id,start:row.start,end:row.end})
+  })
+  if(!items.length){toast('กรุณาเพิ่มพนักงานอย่างน้อย 1 คน พร้อมวันที่ให้ครบ','error');return}
+  const r=await api('POST','/api/emp-po',{poNo,client,departmentId,startDate,endDate,expireDate,items})
+  if(r.ok){closeM('m-emp-po-create');toast(`สร้าง ${poNo} แล้ว (${items.length} คน)`,'success');loadEmpPOMgmt()}
+  else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+let empAcceptDept=null
+async function loadEmpPO(){
+  await fetchEmpModuleData()
+  renderEmpAcceptDeptList()
+}
+function renderEmpAcceptDeptList(){
+  document.getElementById('emppo-dept-list').innerHTML=C_EMPDEPT.length?C_EMPDEPT.map(d=>
+    `<button type="button" class="deptrow${empAcceptDept===d[0]?' selected':''}" onclick="selectEmpAcceptDept('${d[0]}')">
+      <span class="rname">${esc(d[2]||d[1]||d[0])}</span>
+      <svg class="chev" width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>`
+  ).join(''):`<div style="padding:24px;text-align:center;color:var(--muted)">ยังไม่มีแผนก — ไปที่หน้า "แผนก" เพื่อสร้างแผนกก่อน</div>`
+  renderEmpAcceptPOList()
+}
+function selectEmpAcceptDept(id){
+  empAcceptDept=(empAcceptDept===id)?null:id
+  renderEmpAcceptDeptList()
+}
+function renderEmpAcceptPOList(){
+  const el=document.getElementById('emppo-po-list')
+  if(!empAcceptDept){el.innerHTML='';return}
+  const dept=C_EMPDEPT.find(d=>d[0]===empAcceptDept)
+  const relIds={}
+  C_EMPPO_ITEMS.forEach(it=>{const emp=empById(it[1]);if(emp&&emp[2]===empAcceptDept) relIds[it[0]]=true})
+  const rel=C_EMPPO.filter(po=>relIds[po[0]]).slice().sort((a,b)=>a[0]<b[0]?-1:1)
+  let html=`<div class="card" style="padding:14px 18px;margin-bottom:12px"><strong>PO ที่เกี่ยวข้องกับแผนก ${esc(dept?dept[1]:'')}</strong> <span style="font-size:12px;color:var(--muted)">— กด Approve เพื่ออนุมัติทั้งใบ พนักงานทุกคนในใบนั้นได้สถานะตามไปอัตโนมัติ</span></div>`
+  html+=rel.length?rel.map(po=>empPOCardHTML(po,empAcceptDept)).join(''):`<div class="card" style="padding:24px;text-align:center;color:var(--muted)">ยังไม่มี PO ที่เกี่ยวข้องกับแผนกนี้</div>`
+  el.innerHTML=html
+}
+async function toggleEmpPOStatus(poNo){
+  const r=await api('PATCH',`/api/emp-po/${enc(poNo)}/status`)
+  if(r.ok){
+    toast(r.status==='Approved'?'อนุมัติแล้ว ✅':'เปลี่ยนเป็น Wait Team Leader','success')
+    await fetchEmpModuleData()
+    if(document.getElementById('page-emp-dash').classList.contains('active')) renderEmpDash()
+    else if(document.getElementById('page-emp-po-mgmt').classList.contains('active')) renderEmpPOMgmtList()
+    else if(document.getElementById('page-emp-po').classList.contains('active')) renderEmpAcceptPOList()
+  }else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
 
 function renderAlPage(){
