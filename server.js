@@ -264,6 +264,43 @@ app.post('/api/emp-departments',auth,async(req,res)=>{
     res.json({ok:true,id})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
+app.patch('/api/emp-departments/:id',auth,async(req,res)=>{
+  try{
+    const{name,head}=req.body
+    if(!name) return res.status(400).json({ok:false,error:'กรุณาระบุชื่อแผนก'})
+    const rows=await readSheet('DEPARTMENTS!A2:E')
+    const i=rows.findIndex(r=>r[0]===req.params.id)
+    if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบแผนก'})
+    const updated=[...rows[i]];updated[1]=name;updated[2]=head||''
+    await updateRow('DEPARTMENTS',i+2,updated.slice(0,5))
+    await log(req.user,'UPDATE_EMP_DEPT',`แก้ไขแผนก ${req.params.id} เป็น ${name}`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
+app.post('/api/emp-employees/bulk-department',auth,async(req,res)=>{
+  try{
+    const{rows}=req.body
+    if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
+    const str=v=>(v===null||v===undefined)?'':String(v).trim()
+    const[emps,depts]=await Promise.all([readSheet('EMPLOYEES!A2:G'),readSheet('DEPARTMENTS!A2:E')])
+    let updated=0;const notFoundIds=[];const deptNotFoundIds=[]
+    for(const r of rows){
+      const id=str(r['Employee ID']??r['EmployeeID']??r['employee id']??'')
+      if(!id) continue
+      const idx=emps.findIndex(e=>e[0]===id)
+      if(idx===-1){notFoundIds.push(id);continue}
+      const deptName=str(r['แผนก']??r['Department']??r['department']??'')
+      const dept=depts.find(d=>str(d[1]).toLowerCase()===deptName.toLowerCase())
+      if(!dept){deptNotFoundIds.push(id);continue}
+      const row=[...emps[idx]];row[2]=dept[0]
+      await updateRow('EMPLOYEES',idx+2,row.slice(0,7))
+      emps[idx]=row
+      updated++
+    }
+    await log(req.user,'EMP_BULK_DEPT',`อัปเดตแผนกพนักงาน: สำเร็จ ${updated} ไม่พบพนักงาน ${notFoundIds.length} ไม่พบแผนก ${deptNotFoundIds.length}`)
+    res.json({ok:true,updated,notFoundIds,deptNotFoundIds})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
 app.patch('/api/emp-employees/:id/department',auth,async(req,res)=>{
   try{
     const{departmentId}=req.body

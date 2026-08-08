@@ -31,9 +31,10 @@ body{font-family:'Fira Sans','Sarabun',sans-serif;background:var(--bg);color:var
 .user-name{font-size:13px;font-weight:600;color:#fff}
 .user-email{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;word-break:break-all}
 .nav-sec{font-size:10px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.3);padding:12px 14px 4px;text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'Fira Sans','Sarabun',sans-serif}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.65);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'Fira Sans','Sarabun',sans-serif;white-space:normal;word-break:break-word;box-sizing:border-box}
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .nav-item.active{background:linear-gradient(90deg,#C2570F,#F0923D);color:#fff;box-shadow:0 4px 12px rgba(194,87,15,.4)}
+.nav-item-emp{font-size:12px;line-height:1.3;padding:8px 12px}
 .nav-badge{margin-left:auto;background:#F43F5E;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
 .logout-btn{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;border:none;background:none;width:100%;font-family:'Fira Sans','Sarabun',sans-serif;transition:all .2s}
 .logout-btn:hover{background:rgba(239,68,68,.15);color:#FCA5A5}
@@ -261,11 +262,11 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <button class="nav-item" onclick="nav('po-form',this)">➕ เพิ่ม PO</button>
     <button class="nav-item" onclick="nav('bulk',this)">📤 Bulk Upload</button>
     <div class="nav-sec">พนักงาน & PO (ใหม่)</div>
-    <button class="nav-item" onclick="nav('emp-dash',this);loadEmpDash()">⊞ Dashboard (พนักงาน)</button>
-    <button class="nav-item" onclick="nav('emp-list',this);loadEmpEmployees()">👥 พนักงาน</button>
-    <button class="nav-item" onclick="nav('emp-dept',this);loadEmpDept()">🏢 แผนก</button>
-    <button class="nav-item" onclick="nav('emp-po-mgmt',this);loadEmpPOMgmt()">📄 PO Management</button>
-    <button class="nav-item" onclick="nav('emp-po',this);loadEmpPO()">✅ Acceptance by Por</button>
+    <button class="nav-item nav-item-emp" onclick="nav('emp-dash',this);loadEmpDash()">⊞ Dashboard (พนักงาน)</button>
+    <button class="nav-item nav-item-emp" onclick="nav('emp-list',this);loadEmpEmployees()">👥 พนักงาน</button>
+    <button class="nav-item nav-item-emp" onclick="nav('emp-dept',this);loadEmpDept()">🏢 แผนก</button>
+    <button class="nav-item nav-item-emp" onclick="nav('emp-po-mgmt',this);loadEmpPOMgmt()">📄 PO Management</button>
+    <button class="nav-item nav-item-emp" onclick="nav('emp-po',this);loadEmpPO()">✅ Acceptance by Por</button>
     <button class="logout-btn" onclick="doLogout()">🚪 ออกจากระบบ</button>
   </aside>
 
@@ -578,6 +579,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
         <div class="topbar-right">
           <input class="fi2" id="empdept-exportmonth" type="month" style="width:150px;padding:8px 12px;font-size:13px" title="เดือนที่ต้องการส่งออก">
           <button class="btn btn-green" onclick="exportEmpDept(null)">↓ ดาวน์โหลดทั้งหมด (Excel)</button>
+          <button class="btn" onclick="openEmpDeptBulk()">📥 อัปเดตแผนกพนักงาน (Excel)</button>
           <button class="btn btn-primary" onclick="openEmpDeptCreate()">+ สร้างแผนก</button>
         </div>
       </div>
@@ -833,6 +835,44 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <input class="fi2" type="text" id="emp-dept-add-input" list="empDatalist" placeholder="เช่น CT68742" style="width:100%;margin-bottom:8px">
     <div style="font-size:12px;color:var(--muted);margin-bottom:16px">พิมพ์รหัสหรือเลือกจากรายการ แล้วกด "เพิ่มเข้าแผนก"</div>
     <div style="display:flex;gap:10px"><button class="btn btn-primary" onclick="saveEmpDeptAdd()">เพิ่มเข้าแผนก</button><button class="btn btn-ghost" onclick="closeM('m-emp-dept-add')">ยกเลิก</button></div>
+  </div>
+</div></div>
+
+<!-- MODAL: Edit department -->
+<div class="mbg" id="m-emp-dept-edit"><div class="modal" style="max-width:420px">
+  <div class="modal-hdr"><div class="modal-title">✏️ แก้ไขแผนก</div><button class="modal-x" onclick="closeM('m-emp-dept-edit')">✕</button></div>
+  <div class="modal-body">
+    <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">ชื่อแผนก</label>
+    <input class="fi2" type="text" id="emp-dept-edit-name" style="width:100%;margin-bottom:14px">
+    <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">หัวหน้าแผนก</label>
+    <input class="fi2" type="text" id="emp-dept-edit-head" style="width:100%;margin-bottom:16px">
+    <div style="display:flex;gap:10px"><button class="btn btn-primary" onclick="saveEmpDeptEdit()">บันทึกการแก้ไข</button><button class="btn btn-ghost" onclick="closeM('m-emp-dept-edit')">ยกเลิก</button></div>
+  </div>
+</div></div>
+
+<!-- MODAL: Bulk-update employee departments via Excel -->
+<div class="mbg" id="m-emp-dept-bulk"><div class="modal" style="max-width:560px">
+  <div class="modal-hdr"><div class="modal-title">📥 อัปเดตแผนกพนักงาน (Excel)</div><button class="modal-x" onclick="closeM('m-emp-dept-bulk')">✕</button></div>
+  <div class="modal-body">
+    <div style="background:#FDECDC;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#A8460B;line-height:1.8">
+      📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
+      <strong>Employee ID | แผนก</strong><br>
+      <span style="color:var(--muted);font-size:12px">• Employee ID ต้องมีอยู่แล้วในระบบ (ไม่สร้างพนักงานใหม่จากไฟล์นี้)<br>
+      • ชื่อแผนกต้องตรงกับที่สร้างไว้แล้วในหน้า "แผนก" — ถ้าไม่ตรงหรือไม่พบพนักงาน แถวนั้นจะถูกข้าม</span>
+    </div>
+    <div class="upload-zone" onclick="document.getElementById('emp-dept-bulk-file').click()">
+      <input type="file" id="emp-dept-bulk-file" accept=".xlsx,.xls,.csv" onchange="handleEmpDeptBulkFile(event)">
+      <div class="upload-icon">📂</div>
+      <div class="upload-hint">คลิกหรือลากไฟล์ Excel มาวางที่นี่<br><strong>.xlsx / .xls / .csv</strong></div>
+    </div>
+    <div id="emp-dept-bulk-preview" style="margin-top:16px;display:none">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="emp-dept-bulk-preview-title"></div>
+      <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+        <table><thead><tr><th>Employee ID</th><th>แผนก</th></tr></thead>
+        <tbody id="emp-dept-bulk-preview-body"></tbody></table>
+      </div>
+      <button class="btn btn-primary" onclick="submitEmpDeptBulk()" style="margin-top:14px">📥 อัปเดตข้อมูล</button>
+    </div>
   </div>
 </div></div>
 
@@ -1454,7 +1494,7 @@ function renderEmpDeptDetail(){
   if(!dept){el.innerHTML='';return}
   const members=C_EMPLOYEES.filter(e=>e[2]===empDeptSelected)
   let html=`<div class="card"><div class="topbar" style="border-bottom:1px solid var(--border)">
-    <div><div class="page-title" style="font-size:16px">${esc(dept[1]||'')}</div><div class="page-sub">หัวหน้า: ${esc(dept[2]||'—')}</div></div>
+    <div><div class="page-title" style="font-size:16px">${esc(dept[1]||'')} <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px;vertical-align:middle" onclick="openEmpDeptEdit('${dept[0]}')">✏️ แก้ไข</button></div><div class="page-sub">หัวหน้า: ${esc(dept[2]||'—')}</div></div>
     <div class="topbar-right">
       <button class="btn btn-green btn-sm" onclick="exportEmpDept('${dept[0]}')">↓ ดาวน์โหลดแผนกนี้ (Excel)</button>
       <button class="btn btn-primary btn-sm" onclick="openEmpDeptAdd('${dept[0]}')">+ เพิ่มพนักงาน</button>
@@ -1499,6 +1539,68 @@ async function saveEmpDeptAdd(){
   const r=await api('PATCH',`/api/emp-employees/${enc(id)}/department`,{departmentId:EMP_DEPT_ADD_TARGET})
   if(r.ok){closeM('m-emp-dept-add');toast(`${id} ถูกเพิ่มเข้าแผนกแล้ว`,'success');await loadEmpDept();empDeptSelected=EMP_DEPT_ADD_TARGET;renderEmpDeptList()}
   else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+let EMP_DEPT_EDIT_TARGET=null
+function openEmpDeptEdit(deptId){
+  const dept=C_EMPDEPT.find(d=>d[0]===deptId)
+  if(!dept) return
+  EMP_DEPT_EDIT_TARGET=deptId
+  document.getElementById('emp-dept-edit-name').value=dept[1]||''
+  document.getElementById('emp-dept-edit-head').value=dept[2]||''
+  document.getElementById('m-emp-dept-edit').classList.add('show')
+}
+async function saveEmpDeptEdit(){
+  const name=document.getElementById('emp-dept-edit-name').value.trim()
+  const head=document.getElementById('emp-dept-edit-head').value.trim()
+  if(!name){toast('กรุณาระบุชื่อแผนก','error');return}
+  const r=await api('PATCH',`/api/emp-departments/${enc(EMP_DEPT_EDIT_TARGET)}`,{name,head})
+  if(r.ok){closeM('m-emp-dept-edit');toast('บันทึกการแก้ไขแล้ว','success');await loadEmpDept();empDeptSelected=EMP_DEPT_EDIT_TARGET;renderEmpDeptList()}
+  else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+function openEmpDeptBulk(){
+  EMP_DEPT_BULK_DATA=[]
+  document.getElementById('emp-dept-bulk-file').value=''
+  document.getElementById('emp-dept-bulk-preview').style.display='none'
+  document.getElementById('m-emp-dept-bulk').classList.add('show')
+}
+let EMP_DEPT_BULK_DATA=[]
+function handleEmpDeptBulkFile(e){const f=e.target.files[0];if(f)processEmpDeptBulk(f)}
+function processEmpDeptBulk(file){
+  loadXLSX(()=>{
+    const reader=new FileReader()
+    reader.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:'array'})
+      const ws=wb.Sheets[wb.SheetNames[0]]
+      let headerRow=0
+      const range=XLSX.utils.decode_range(ws['!ref']||'A1:F10')
+      for(let r=0;r<=Math.min(5,range.e.r);r++){
+        let txt=''
+        for(let c=0;c<=5;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell)txt+=String(cell.v||'').trim()+' '}
+        if(txt.includes('Employee ID')||txt.includes('แผนก')){headerRow=r;break}
+      }
+      const data=XLSX.utils.sheet_to_json(ws,{defval:'',range:headerRow})
+      const norm=data.map(row=>{const nr={};for(const[k,v]of Object.entries(row))nr[String(k).trim()]=v;return nr})
+      EMP_DEPT_BULK_DATA=norm
+      document.getElementById('emp-dept-bulk-preview-body').innerHTML=norm.slice(0,10).map(r=>`<tr>
+        <td style="font-weight:600;color:var(--blue)">${esc(r['Employee ID']||'')}</td>
+        <td>${esc(r['แผนก']||r['Department']||'')}</td>
+      </tr>`).join('')
+      document.getElementById('emp-dept-bulk-preview-title').textContent=`พบ ${norm.length} แถว (แสดง 10 แรก)`
+      document.getElementById('emp-dept-bulk-preview').style.display=''
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+async function submitEmpDeptBulk(){
+  if(!EMP_DEPT_BULK_DATA.length){toast('ไม่มีข้อมูล','error');return}
+  const r=await api('POST','/api/emp-employees/bulk-department',{rows:EMP_DEPT_BULK_DATA})
+  if(r.ok){
+    const parts=[`อัปเดตสำเร็จ ${r.updated} คน`]
+    if(r.notFoundIds&&r.notFoundIds.length) parts.push(`ไม่พบพนักงาน ${r.notFoundIds.length} คน`)
+    if(r.deptNotFoundIds&&r.deptNotFoundIds.length) parts.push(`ไม่พบชื่อแผนก ${r.deptNotFoundIds.length} คน`)
+    toast(parts.join(' · '),'success')
+    closeM('m-emp-dept-bulk');await loadEmpDept();renderEmpDeptList()
+  }else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
 function exportEmpDept(deptId){
   const month=document.getElementById('empdept-exportmonth').value||''
