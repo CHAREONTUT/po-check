@@ -401,9 +401,11 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
           <button class="btn btn-ghost" onclick="loadAll();loadEmpDash()">🔄 รีเฟรช</button>
         </div>
       </div>
-      <div class="stats-emp" id="empdash-tiles"></div>
+      <div class="stats-emp" style="align-items:start">
+        <div id="empdash-tiles" style="display:contents"></div>
+        <div class="card" style="margin:0"><div class="card-hdr"><div class="card-title">⏱ ล่วงเวลาทำงานล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="nav('ot-list',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-ot" style="max-height:220px;overflow-y:auto"></div></div>
+      </div>
       <div id="empdash-detail"></div>
-      <div class="card" style="margin-top:18px"><div class="card-hdr"><div class="card-title">⏱ ล่วงเวลาทำงานล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="nav('ot-list',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-ot"></div></div>
     </div>
 
     <!-- EMPLOYEES LIST -->
