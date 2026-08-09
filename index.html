@@ -684,8 +684,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     </div>
     <div style="margin-bottom:10px"><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">แผนก (ถ้ามี)</label><select class="fi2" id="emp-po-dept" style="width:100%"><option value="">— ไม่ระบุ —</option></select></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันเริ่มต้น</label><input class="fi2" type="date" id="emp-po-start" style="width:100%"></div>
-      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันสิ้นสุด</label><input class="fi2" type="date" id="emp-po-end" style="width:100%"></div>
+      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันเริ่มต้น</label><input class="fi2" type="date" id="emp-po-start" style="width:100%" onchange="renderEmpPOItemRows()"></div>
+      <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันสิ้นสุด</label><input class="fi2" type="date" id="emp-po-end" style="width:100%" onchange="renderEmpPOItemRows()"></div>
       <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">วันหมดอายุ</label><input class="fi2" type="date" id="emp-po-expire" style="width:100%"></div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px">
@@ -1369,23 +1369,38 @@ function openEmpPOEdit(poNo){
   document.getElementById('emp-po-end').value=po[4]||''
   document.getElementById('emp-po-expire').value=po[5]||''
   EMP_PO_DRAFT_ITEMS=C_EMPPO_ITEMS.filter(it=>it[0]===poNo).map(it=>({
-    empLabel:it[1]+' — '+(it[2]||empById(it[1])?.[1]||''),start:it[3]||'',end:it[4]||''
+    empLabel:it[1]+' — '+(it[2]||empById(it[1])?.[1]||''),start:it[3]||'',end:it[4]||'',
+    syncStart:!!(po[3]&&it[3]===po[3]),syncEnd:!!(po[4]&&it[4]===po[4])
   }))
   renderEmpPOItemRows()
   document.getElementById('m-emp-po-create').classList.add('show')
 }
 function renderEmpPOItemRows(){
   const wrap=document.getElementById('emp-po-item-rows')
-  wrap.innerHTML=EMP_PO_DRAFT_ITEMS.length?EMP_PO_DRAFT_ITEMS.map((row,i)=>`
-    <div class="item-row-edit">
+  const poStart=document.getElementById('emp-po-start').value
+  const poEnd=document.getElementById('emp-po-end').value
+  wrap.innerHTML=EMP_PO_DRAFT_ITEMS.length?EMP_PO_DRAFT_ITEMS.map((row,i)=>{
+    const startVal=row.syncStart?poStart:row.start
+    const endVal=row.syncEnd?poEnd:row.end
+    return `<div class="item-row-edit">
       <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Employee</label><input class="fi2" type="text" list="empDatalist" value="${esc(row.empLabel||'')}" style="width:100%" onchange="updateEmpPOItemDraft(${i},'emp',this.value)"></div>
-      <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">เริ่ม</label><input class="fi2" type="date" value="${esc(row.start||'')}" style="width:100%" onchange="updateEmpPOItemDraft(${i},'start',this.value)"></div>
-      <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">ถึง</label><input class="fi2" type="date" value="${esc(row.end||'')}" style="width:100%" onchange="updateEmpPOItemDraft(${i},'end',this.value)"></div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">เริ่ม</label>
+        <input class="fi2" type="date" value="${esc(startVal||'')}" style="width:100%"${row.syncStart?' disabled':''} onchange="updateEmpPOItemDraft(${i},'start',this.value)">
+        <label style="display:flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox"${row.syncStart?' checked':''} onchange="toggleEmpPOItemSync(${i},'syncStart',this.checked)">เริ่มพร้อม PO</label>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">ถึง</label>
+        <input class="fi2" type="date" value="${esc(endVal||'')}" style="width:100%"${row.syncEnd?' disabled':''} onchange="updateEmpPOItemDraft(${i},'end',this.value)">
+        <label style="display:flex;align-items:center;gap:4px;margin-top:4px;font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox"${row.syncEnd?' checked':''} onchange="toggleEmpPOItemSync(${i},'syncEnd',this.checked)">จบพร้อม PO</label>
+      </div>
       <button type="button" class="btn btn-ghost btn-sm" onclick="removeEmpPOItemRow(${i})">ลบ</button>
-    </div>`).join(''):'<div style="font-size:12px;color:var(--muted)">ยังไม่มีพนักงานในรายการ กด "+ เพิ่มพนักงาน"</div>'
+    </div>`
+  }).join(''):'<div style="font-size:12px;color:var(--muted)">ยังไม่มีพนักงานในรายการ กด "+ เพิ่มพนักงาน"</div>'
 }
-function addEmpPOItemRow(){EMP_PO_DRAFT_ITEMS.push({empLabel:'',start:'',end:''});renderEmpPOItemRows()}
+function addEmpPOItemRow(){EMP_PO_DRAFT_ITEMS.push({empLabel:'',start:'',end:'',syncStart:true,syncEnd:true});renderEmpPOItemRows()}
 function removeEmpPOItemRow(i){EMP_PO_DRAFT_ITEMS.splice(i,1);renderEmpPOItemRows()}
+function toggleEmpPOItemSync(i,field,checked){EMP_PO_DRAFT_ITEMS[i][field]=checked;renderEmpPOItemRows()}
 function updateEmpPOItemDraft(i,field,val){
   if(field==='emp')EMP_PO_DRAFT_ITEMS[i].empLabel=val
   if(field==='start')EMP_PO_DRAFT_ITEMS[i].start=val
@@ -1402,7 +1417,9 @@ async function saveEmpPOCreate(){
   const items=[]
   EMP_PO_DRAFT_ITEMS.forEach(row=>{
     const id=parseEmpInput(row.empLabel)
-    if(id&&row.start&&row.end) items.push({employeeId:id,start:row.start,end:row.end})
+    const start=row.syncStart?startDate:row.start
+    const end=row.syncEnd?endDate:row.end
+    if(id&&start&&end) items.push({employeeId:id,start,end})
   })
   if(!items.length){toast('กรุณาเพิ่มพนักงานอย่างน้อย 1 คน พร้อมวันที่ให้ครบ','error');return}
   const r=EMP_PO_EDIT_TARGET
