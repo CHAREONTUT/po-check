@@ -283,6 +283,35 @@ app.post('/api/emp-po',auth,async(req,res)=>{
     res.json({ok:true})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
+app.put('/api/emp-po/:poNo',auth,async(req,res)=>{
+  try{
+    const{client,departmentId,startDate,endDate,expireDate,items}=req.body
+    if(!items||!items.length||!items.some(it=>it.employeeId&&it.start&&it.end)) return res.status(400).json({ok:false,error:'กรุณาเพิ่มพนักงานอย่างน้อย 1 คน พร้อมวันที่ให้ครบ'})
+    const rows=await readSheet('EMP_PO!A2:I')
+    const i=rows.findIndex(r=>r[0]===req.params.poNo)
+    if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบ PO'})
+    const orig=rows[i]
+    await updateRow('EMP_PO',i+2,[req.params.poNo,client||'',departmentId||'',startDate||'',endDate||'',expireDate||'',orig[6],orig[7],orig[8]])
+    const sheets=google.sheets({version:'v4',auth:ga()})
+    const itemRows=await readSheet('EMP_PO_ITEMS!A2:G')
+    const delIdx=[]
+    itemRows.forEach((r,idx)=>{if(r[0]===req.params.poNo) delIdx.push(idx+2)})
+    if(delIdx.length){
+      const meta=await sheets.spreadsheets.get({spreadsheetId:SHEET_ID})
+      const sh=meta.data.sheets.find(s=>s.properties.title==='EMP_PO_ITEMS')
+      const requests=delIdx.sort((a,b)=>b-a).map(idx=>({deleteDimension:{range:{sheetId:sh.properties.sheetId,dimension:'ROWS',startIndex:idx-1,endIndex:idx}}}))
+      await sheets.spreadsheets.batchUpdate({spreadsheetId:SHEET_ID,requestBody:{requests}})
+    }
+    const emps=await readSheet('EMPLOYEES!A2:G')
+    const empName=id=>{const e=emps.find(x=>x[0]===id);return e?e[1]:''}
+    const now=new Date().toLocaleString('th-TH')
+    const validItems=items.filter(it=>it.employeeId&&it.start&&it.end)
+    const newItemRows=validItems.map(it=>[req.params.poNo,it.employeeId,empName(it.employeeId),it.start,it.end,req.user.name,now])
+    if(newItemRows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'EMP_PO_ITEMS!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newItemRows}})
+    await log(req.user,'UPDATE_EMP_PO',`แก้ไข PO ${req.params.poNo} (${newItemRows.length} คน)`)
+    res.json({ok:true})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
 
 // OT
 app.get('/api/ot',auth,async(req,res)=>{

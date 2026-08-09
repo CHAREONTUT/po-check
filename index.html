@@ -676,7 +676,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
 <!-- MODAL: Bulk-import departments via Excel -->
 <!-- MODAL: Create PO (new module) -->
 <div class="mbg" id="m-emp-po-create"><div class="modal" style="max-width:640px">
-  <div class="modal-hdr"><div class="modal-title">📄 สร้าง PO ใหม่</div><button class="modal-x" onclick="closeM('m-emp-po-create')">✕</button></div>
+  <div class="modal-hdr"><div class="modal-title" id="emp-po-modal-title">📄 สร้าง PO ใหม่</div><button class="modal-x" onclick="closeM('m-emp-po-create')">✕</button></div>
   <div class="modal-body">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px">เลขที่ PO</label><input class="fi2" type="text" id="emp-po-no" style="width:100%"></div>
@@ -696,7 +696,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
       <div id="emp-po-item-rows"></div>
       <div style="font-size:11.5px;color:var(--muted)">* พนักงานคนเดียวกันใส่ซ้ำได้หลายแถว โดยระบุช่วงวันที่ต่างกัน (เช่น PO เก่าหมดกลางเดือน)</div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-primary" onclick="saveEmpPOCreate()">สร้าง PO</button><button class="btn btn-ghost" onclick="closeM('m-emp-po-create')">ยกเลิก</button></div>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-primary" id="emp-po-modal-btn" onclick="saveEmpPOCreate()">สร้าง PO</button><button class="btn btn-ghost" onclick="closeM('m-emp-po-create')">ยกเลิก</button></div>
   </div>
 </div></div>
 
@@ -986,7 +986,10 @@ function empPOCardHTML(po,highlightDeptId){
   return `<div class="pocard">
     <div class="po-top">
       <div><div class="po-id mono">${esc(po[0]||'')}</div><div class="po-meta">${esc(po[1]||'ไม่ระบุลูกค้า')} · ${fmtDateShort(po[3])} – ${fmtDateShort(po[4])}${po[5]?' · หมดอายุ '+fmtDateShort(po[5]):''} · ${items.length} รายการ</div></div>
-      <button class="btn ${approved?'btn-amber':'btn-green'} btn-sm" onclick="toggleEmpPOStatus('${po[0]}')">${approved?'↩️ Wait Team Leader':'✅ Approve'}</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="openEmpPOEdit('${po[0]}')">✏️ แก้ไข</button>
+        <button class="btn ${approved?'btn-amber':'btn-green'} btn-sm" onclick="toggleEmpPOStatus('${po[0]}')">${approved?'↩️ Wait Team Leader':'✅ Approve'}</button>
+      </div>
     </div>
     <div class="po-items">${itemsHTML||'<div style="padding:10px 16px;font-size:12px;color:var(--muted)">ไม่มีพนักงานใน PO นี้</div>'}</div>
   </div>`
@@ -1312,8 +1315,13 @@ function renderEmpPOMgmtList(){
   document.getElementById('empmgmt-list').innerHTML=list.length?list.map(po=>empPOCardHTML(po,null)).join(''):`<div class="card" style="padding:24px;text-align:center;color:var(--muted)">ไม่พบ PO${q?' เลขที่ "'+esc(q)+'"':''}</div>`
 }
 let EMP_PO_DRAFT_ITEMS=[]
+let EMP_PO_EDIT_TARGET=null
 function openEmpPOCreate(){
+  EMP_PO_EDIT_TARGET=null
+  document.getElementById('emp-po-modal-title').textContent='📄 สร้าง PO ใหม่'
+  document.getElementById('emp-po-modal-btn').textContent='สร้าง PO'
   document.getElementById('emp-po-no').value=''
+  document.getElementById('emp-po-no').disabled=false
   document.getElementById('emp-po-client').value=''
   const dsel=document.getElementById('emp-po-dept')
   dsel.innerHTML='<option value="">— ไม่ระบุ —</option>'+C_EMPDEPT.map(d=>`<option value="${esc(d[0])}">${esc(d[1]||d[0])}</option>`).join('')
@@ -1321,6 +1329,27 @@ function openEmpPOCreate(){
   document.getElementById('emp-po-end').value=''
   document.getElementById('emp-po-expire').value=''
   EMP_PO_DRAFT_ITEMS=[]
+  renderEmpPOItemRows()
+  document.getElementById('m-emp-po-create').classList.add('show')
+}
+function openEmpPOEdit(poNo){
+  const po=C_EMPPO.find(p=>p[0]===poNo)
+  if(!po){toast('ไม่พบ PO','error');return}
+  EMP_PO_EDIT_TARGET=poNo
+  document.getElementById('emp-po-modal-title').textContent='✏️ แก้ไข PO: '+poNo
+  document.getElementById('emp-po-modal-btn').textContent='บันทึกการแก้ไข'
+  document.getElementById('emp-po-no').value=poNo
+  document.getElementById('emp-po-no').disabled=true
+  document.getElementById('emp-po-client').value=po[1]||''
+  const dsel=document.getElementById('emp-po-dept')
+  dsel.innerHTML='<option value="">— ไม่ระบุ —</option>'+C_EMPDEPT.map(d=>`<option value="${esc(d[0])}">${esc(d[1]||d[0])}</option>`).join('')
+  dsel.value=po[2]||''
+  document.getElementById('emp-po-start').value=po[3]||''
+  document.getElementById('emp-po-end').value=po[4]||''
+  document.getElementById('emp-po-expire').value=po[5]||''
+  EMP_PO_DRAFT_ITEMS=C_EMPPO_ITEMS.filter(it=>it[0]===poNo).map(it=>({
+    empLabel:it[1]+' — '+(it[2]||empById(it[1])?.[1]||''),start:it[3]||'',end:it[4]||''
+  }))
   renderEmpPOItemRows()
   document.getElementById('m-emp-po-create').classList.add('show')
 }
@@ -1355,9 +1384,16 @@ async function saveEmpPOCreate(){
     if(id&&row.start&&row.end) items.push({employeeId:id,start:row.start,end:row.end})
   })
   if(!items.length){toast('กรุณาเพิ่มพนักงานอย่างน้อย 1 คน พร้อมวันที่ให้ครบ','error');return}
-  const r=await api('POST','/api/emp-po',{poNo,client,departmentId,startDate,endDate,expireDate,items})
-  if(r.ok){closeM('m-emp-po-create');toast(`สร้าง ${poNo} แล้ว (${items.length} คน)`,'success');loadEmpPOMgmt()}
-  else toast(r.error||'เกิดข้อผิดพลาด','error')
+  const r=EMP_PO_EDIT_TARGET
+    ? await api('PUT',`/api/emp-po/${enc(EMP_PO_EDIT_TARGET)}`,{client,departmentId,startDate,endDate,expireDate,items})
+    : await api('POST','/api/emp-po',{poNo,client,departmentId,startDate,endDate,expireDate,items})
+  if(r.ok){
+    closeM('m-emp-po-create')
+    toast(EMP_PO_EDIT_TARGET?`บันทึกการแก้ไข ${poNo} แล้ว (${items.length} คน)`:`สร้าง ${poNo} แล้ว (${items.length} คน)`,'success')
+    if(document.getElementById('page-emp-po-mgmt').classList.contains('active')) loadEmpPOMgmt()
+    else if(document.getElementById('page-emp-dash').classList.contains('active')) loadEmpDash()
+    else if(document.getElementById('page-emp-po').classList.contains('active')) loadEmpPO()
+  }else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
 let empAcceptDept=null
 async function loadEmpPO(){
