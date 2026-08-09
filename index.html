@@ -61,7 +61,6 @@ body{font-family:'Fira Sans','Sarabun',sans-serif;background:var(--bg);color:var
 .btn-ghost:hover:not(:disabled){background:#EFE0C8}
 .btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#F43F5E);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .stat-card{background:var(--card);border-radius:16px;padding:18px 18px 14px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer;font:inherit;text-align:left;width:100%;color:inherit}
 .stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.1)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -186,8 +185,6 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
 .log-who{font-weight:600;flex-shrink:0;min-width:70px}
 .log-action{flex-shrink:0;min-width:110px;font-weight:600}
 .log-detail{color:var(--muted);flex:1}
-@media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
@@ -200,7 +197,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
   .emp-row{grid-template-columns:auto 1fr auto;flex-wrap:wrap}
   .emp-in-date{display:none}
 }
-@media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}.login-card{padding:30px 22px}.stat-num{font-size:20px}}
+@media(max-width:480px){.login-card{padding:30px 22px}.stat-num{font-size:20px}}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
 .eas-row{display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:center;padding:10px;background:#FDF6EC;border-radius:10px;margin-bottom:6px;border:1px solid var(--border)}
 .eas-row.done{background:#F0FDF4;border-color:#BBF7D0}
@@ -251,14 +248,13 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     </div>
     <div class="user-box"><div class="user-name" id="sb-name">—</div><div class="user-email" id="sb-email">—</div></div>
     <div class="nav-sec">เมนูหลัก</div>
-    <button class="nav-item active" onclick="nav('dash',this)">⊞ Dashboard</button>
+    <button class="nav-item active" onclick="nav('emp-dash',this);loadEmpDash()">⊞ Dashboard</button>
     <button class="nav-item" onclick="nav('alert',this)">🔔 แจ้งเตือน <span class="nav-badge" id="al-badge">0</span></button>
     <button class="nav-item" onclick="nav('tracking',this);loadTracking()">📦 Tracking No.</button>
     <div class="nav-sec">ล่วงเวลาทำงาน</div>
     <button class="nav-item" onclick="nav('ot-form',this)">⏱ บันทึกล่วงเวลาทำงาน</button>
     <button class="nav-item" onclick="nav('ot-list',this)">📊 รายการล่วงเวลาทำงาน</button>
     <div class="nav-sec">พนักงาน & PO (ใหม่)</div>
-    <button class="nav-item nav-item-emp" onclick="nav('emp-dash',this);loadEmpDash()">⊞ Dashboard (พนักงาน)</button>
     <button class="nav-item nav-item-emp" onclick="nav('emp-list',this);loadEmpEmployees()">👥 พนักงาน</button>
     <button class="nav-item nav-item-emp" onclick="nav('emp-dept',this);loadEmpDept()">🏢 แผนก</button>
     <button class="nav-item nav-item-emp" onclick="nav('emp-po-mgmt',this);loadEmpPOMgmt()">📄 PO Management</button>
@@ -267,36 +263,6 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
   </aside>
 
   <main class="main">
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dash">
-      <div class="topbar">
-        <div><div class="page-title">Dashboard ภาพรวม</div><div class="page-sub" id="last-upd">กำลังโหลด...</div></div>
-        <div class="topbar-right"><button class="btn btn-ghost" onclick="loadAll()">🔄 รีเฟรช</button><div class="avatar" id="top-av">ป</div></div>
-      </div>
-      <div class="stats">
-        <div class="stat-card sc-blue" onclick="nav('emp-po-mgmt',null)"><div class="stat-icon">📄</div><div class="stat-num" id="s-po">—</div><div class="stat-label">ใบ PO ทั้งหมด</div><div class="stat-badge bo" id="s-po-s">—</div><div class="stat-hint">คลิกดูรายการ →</div></div>
-        <div class="stat-card sc-amber" onclick="nav('alert',null)"><div class="stat-icon">⚠️</div><div class="stat-num" id="s-al">—</div><div class="stat-label">PO ใกล้หมดสัญญา</div><div class="stat-badge bw">14 วัน</div><div class="stat-hint">คลิกดูรายการ →</div></div>
-        <div class="stat-card sc-teal" onclick="nav('ot-list',null)"><div class="stat-icon">⏱</div><div class="stat-num" id="s-ot">—</div><div class="stat-label">รายการล่วงเวลาทำงานทั้งหมด</div><div class="stat-badge bo">รายการ</div><div class="stat-hint">คลิกดูรายการ →</div></div>
-        <div class="stat-card" style="border-top:3px solid #F43F5E;cursor:pointer" onclick="document.getElementById('expired-card').scrollIntoView({behavior:'smooth'})"><div class="stat-icon" style="background:#FFF1F2">📛</div><div class="stat-num" id="s-expired" style="color:#BE123C">—</div><div class="stat-label">PO หมดสัญญาแล้ว</div><div class="stat-badge t-red">หมดแล้ว</div><div class="stat-hint" style="color:#BE123C">คลิกดูรายการ ↓</div></div>
-      </div>
-      <div class="grid2">
-        <div class="card"><div class="card-hdr"><div class="card-title">🔔 PO ใกล้หมดสัญญา</div><button class="btn btn-ghost btn-sm" onclick="nav('alert',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-al"></div></div>
-        <div class="card"><div class="card-hdr"><div class="card-title">⏱ ล่วงเวลาทำงานล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="nav('ot-list',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-ot"></div></div>
-      </div>
-      <div class="card" id="expired-card" style="margin-bottom:18px">
-        <div class="card-hdr">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="card-title">📛 PO ที่หมดสัญญาแล้ว</div>
-            <span class="tag t-red" id="expired-count-badge">0</span>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="loadAll()">🔄 รีเฟรช</button>
-        </div>
-        <div id="dash-expired">
-          <div class="empty" style="padding:20px"><div class="empty-icon">✅</div><div class="empty-text">ไม่มี PO ที่หมดสัญญา</div></div>
-        </div>
-      </div>
-    </div>
-
     <!-- ALERT -->
     <div class="page" id="page-alert">
       <div class="topbar"><div><div class="page-title">🔔 PO ใกล้หมดสัญญา</div><div class="page-sub">ภายใน 21 วัน</div></div></div>
@@ -432,10 +398,12 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
         <div><div class="page-title">⊞ Dashboard (พนักงาน & PO)</div><div class="page-sub">ภาพรวมสถานะพนักงานและ PO รายเดือน</div></div>
         <div class="topbar-right">
           <input class="fi2" id="empdash-month" type="month" style="width:150px;padding:8px 12px;font-size:13px" onchange="renderEmpDash()">
+          <button class="btn btn-ghost" onclick="loadAll();loadEmpDash()">🔄 รีเฟรช</button>
         </div>
       </div>
       <div class="stats-emp" id="empdash-tiles"></div>
       <div id="empdash-detail"></div>
+      <div class="card" style="margin-top:18px"><div class="card-hdr"><div class="card-title">⏱ ล่วงเวลาทำงานล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="nav('ot-list',null)">ดูทั้งหมด</button></div><div class="card-body" id="dash-ot"></div></div>
     </div>
 
     <!-- EMPLOYEES LIST -->
@@ -863,7 +831,7 @@ function loadXLSX(cb){
 
 let TOKEN=localStorage.getItem('po_token')||''
 let USER=JSON.parse(localStorage.getItem('po_user')||'null')
-let C={ot:[],alerts:[],logs:[],expired:[]}
+let C={ot:[],alerts:[],logs:[]}
 let DEL_TARGET='',EDIT_OT_IDX=0
 
 function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show')}
@@ -900,13 +868,13 @@ function enterApp(){
   document.getElementById('app').classList.add('show')
   document.getElementById('sb-name').textContent=USER?.name||'—'
   document.getElementById('sb-email').textContent=USER?.email||'—'
-  document.getElementById('top-av').textContent=(USER?.name||'U')[0].toUpperCase()
   // Always reset to Dashboard every time app enters (login / refresh)
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
-  document.getElementById('page-dash').classList.add('active')
+  document.getElementById('page-emp-dash').classList.add('active')
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'))
   document.querySelector('.nav-item').classList.add('active')
   loadAll()
+  loadEmpDash()
 }
 
 function nav(id,el){
@@ -927,63 +895,17 @@ async function loadAll(){
                  daysLeft:Math.ceil((parseDate(empPOExpiryDate(po))-today)/86400000)}))
       .filter(a=>a.endDate&&a.daysLeft>=0&&a.daysLeft<=21)
       .sort((a,b)=>a.daysLeft-b.daysLeft)
-    C.expired=C_EMPPO
-      .map(po=>({po:po[0],client:po[1],startDate:po[3],endDate:empPOExpiryDate(po),
-                 daysExpired:Math.ceil((today-parseDate(empPOExpiryDate(po)))/86400000)}))
-      .filter(a=>{
-        if(!a.endDate||a.daysExpired<=0) return false
-        const hasActiveEmp=C_EMPPO_ITEMS.some(it=>it[0]===a.po&&it[4]&&parseDate(it[4])>=today)
-        return !hasActiveEmp
-      })
-      .sort((a,b)=>a.daysExpired-b.daysExpired)
     renderAll()
-    document.getElementById('last-upd').textContent='อัปเดต: '+new Date().toLocaleString('th-TH')
   }catch(e){toast('โหลดข้อมูลไม่ได้','error')}
   spin(false)
 }
 async function loadLogs(){
   spin(true);const r=await api('GET','/api/logs');C.logs=r.data||[];renderLogs();spin(false)
 }
-function renderAll(){renderStats();renderDashAl();renderDashOT();renderAlPage();renderOTT();renderExpired();populateOTPOList()}
+function renderAll(){renderStats();renderDashOT();renderAlPage();renderOTT();populateOTPOList()}
 
 function renderStats(){
-  const today=new Date();today.setHours(0,0,0,0)
-  const active=C_EMPPO.filter(po=>{const d=empPOExpiryDate(po);return !d||parseDate(d)>=today})
-  document.getElementById('s-po').textContent=C_EMPPO.length
-  document.getElementById('s-po-s').textContent=`ใช้งาน ${active.length}`
-  document.getElementById('s-al').textContent=C.alerts.length
-  document.getElementById('s-ot').textContent=C.ot.length
   document.getElementById('al-badge').textContent=C.alerts.length
-  document.getElementById('s-expired').textContent=C.expired.length
-  document.getElementById('expired-count-badge').textContent=C.expired.length
-}
-function renderExpired(){
-  const el=document.getElementById('dash-expired')
-  if(!el) return
-  if(!C.expired.length){
-    el.innerHTML='<div class="empty" style="padding:20px"><div class="empty-icon">✅</div><div class="empty-text">ไม่มี PO ที่หมดสัญญา</div></div>'
-    return
-  }
-  el.innerHTML='<div class="tbl-wrap"><table><thead><tr>'+
-    '<th style="padding-left:14px">เลข PO</th><th>ชื่อลูกค้า</th><th>วันเริ่ม</th><th>วันหมดสัญญา</th><th>หมดมาแล้ว</th>'+
-    '</tr></thead><tbody>'+
-    C.expired.map(a=>`<tr>
-      <td style="padding-left:14px;font-weight:600">${a.po}</td>
-      <td>${a.client||'—'}</td>
-      <td style="color:var(--muted);font-size:12px">${a.startDate||'—'}</td>
-      <td style="color:var(--coral);font-size:12px;font-weight:600">${a.endDate}</td>
-      <td><span class="tag t-red">${a.daysExpired} วัน</span></td>
-    </tr>`).join('')+
-    '</tbody></table></div>'
-}
-
-function renderDashAl(){
-  const el=document.getElementById('dash-al')
-  el.innerHTML=C.alerts.length?C.alerts.slice(0,4).map(a=>`
-    <div class="al-row"><div class="dot ${a.daysLeft<=7?'dot-r':'dot-a'}"></div>
-    <div><div style="font-size:13px;font-weight:700">${a.po}</div><div style="font-size:11px;color:var(--muted)">${a.client||''}</div></div>
-    <div class="days-badge ${a.daysLeft<=7?'db-r':'db-a'}">เหลือ ${a.daysLeft} วัน</div></div>`).join('')
-  :`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">ไม่มี PO ใกล้หมด</div></div>`
 }
 function renderDashOT(){
   const el=document.getElementById('dash-ot')
