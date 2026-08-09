@@ -124,7 +124,7 @@ app.get('/api/auth/me',auth,(req,res)=>res.json({ok:true,user:req.user}))
 
 // EMP_PO / EMP_PO_ITEMS — new Employee/Department/PO module. Separate sheets from PO_MASTER/PO_EMPLOYEES; never touch those.
 app.get('/api/emp-po',auth,async(req,res)=>{
-  try{res.json({ok:true,data:await readSheet('EMP_PO!A2:I')})}
+  try{res.json({ok:true,data:await readSheet('EMP_PO!A2:J')})}
   catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 app.get('/api/emp-po-items',auth,async(req,res)=>{
@@ -139,17 +139,35 @@ app.get('/api/emp-departments',auth,async(req,res)=>{
   try{res.json({ok:true,data:await readSheet('DEPARTMENTS!A2:E')})}
   catch(e){res.status(500).json({ok:false,error:e.message})}
 })
-app.patch('/api/emp-po/:poNo/status',auth,async(req,res)=>{
+app.patch('/api/emp-po/:poNo/month',auth,async(req,res)=>{
   try{
-    const rows=await readSheet('EMP_PO!A2:I')
+    const{month}=req.body
+    if(!month) return res.status(400).json({ok:false,error:'กรุณาระบุเดือน'})
+    const rows=await readSheet('EMP_PO!A2:J')
     const i=rows.findIndex(r=>r[0]===req.params.poNo)
     if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบ PO'})
     const row=rows[i]
-    const newStatus=row[6]==='Approved'?'Waiting':'Approved'
-    const updated=[...row];updated[6]=newStatus
-    await updateRow('EMP_PO',i+2,updated.slice(0,9))
-    await log(req.user,'EMP_PO_STATUS',`เปลี่ยนสถานะ PO ${req.params.poNo} เป็น ${newStatus}`)
-    res.json({ok:true,status:newStatus})
+    const expiryOrEnd=row[5]||row[4]
+    let approved
+    if((row[9]||'').trim()){
+      approved=new Set(row[9].split(',').map(m=>m.trim()).filter(Boolean))
+    }else if(row[6]==='Approved'){
+      // migrate implicit whole-PO "Approved" into an explicit per-month set spanning the PO's own range
+      approved=new Set()
+      if(row[3]){
+        let[y,m]=row[3].slice(0,7).split('-').map(Number)
+        const endM=expiryOrEnd?expiryOrEnd.slice(0,7):row[3].slice(0,7)
+        while(y+'-'+String(m).padStart(2,'0')<=endM){approved.add(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++}}
+      }
+    }else{
+      approved=new Set()
+    }
+    if(approved.has(month)) approved.delete(month); else approved.add(month)
+    const updated=[...row]
+    updated[9]=Array.from(approved).sort().join(',')
+    await updateRow('EMP_PO',i+2,updated.slice(0,10))
+    await log(req.user,'EMP_PO_MONTH',`${approved.has(month)?'อนุมัติ':'ยกเลิกอนุมัติ'} PO ${req.params.poNo} เดือน ${month}`)
+    res.json({ok:true,approvedMonths:updated[9]})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 app.post('/api/emp-departments',auth,async(req,res)=>{
@@ -287,11 +305,11 @@ app.put('/api/emp-po/:poNo',auth,async(req,res)=>{
   try{
     const{client,departmentId,startDate,endDate,expireDate,items}=req.body
     if(!items||!items.length||!items.some(it=>it.employeeId&&it.start&&it.end)) return res.status(400).json({ok:false,error:'กรุณาเพิ่มพนักงานอย่างน้อย 1 คน พร้อมวันที่ให้ครบ'})
-    const rows=await readSheet('EMP_PO!A2:I')
+    const rows=await readSheet('EMP_PO!A2:J')
     const i=rows.findIndex(r=>r[0]===req.params.poNo)
     if(i===-1) return res.status(404).json({ok:false,error:'ไม่พบ PO'})
     const orig=rows[i]
-    await updateRow('EMP_PO',i+2,[req.params.poNo,client||'',departmentId||'',startDate||'',endDate||'',expireDate||'',orig[6],orig[7],orig[8]])
+    await updateRow('EMP_PO',i+2,[req.params.poNo,client||'',departmentId||'',startDate||'',endDate||'',expireDate||'',orig[6],orig[7],orig[8],orig[9]||''])
     const sheets=google.sheets({version:'v4',auth:ga()})
     const itemRows=await readSheet('EMP_PO_ITEMS!A2:G')
     const delIdx=[]

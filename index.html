@@ -457,7 +457,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <!-- EMP_PO (new Employee/Department/PO module — separate sheets, not PO_MASTER/PO_EMPLOYEES) -->
     <div class="page" id="page-emp-po">
       <div class="topbar">
-        <div><div class="page-title">✅ Acceptance by Por</div><div class="page-sub">เลือกแผนก (คลิกชื่อหัวหน้าแผนก) เพื่อดู PO ของแผนกนั้น แล้วกด Approve เพื่ออนุมัติทั้งใบ</div></div>
+        <div><div class="page-title">✅ Acceptance by Por</div><div class="page-sub">เลือกแผนก (คลิกชื่อหัวหน้าแผนก) เพื่อดู PO ของแผนกนั้น แล้วกดอนุมัติแยกตามเดือน</div></div>
       </div>
       <div class="deptlist" id="emppo-dept-list"></div>
       <div id="emppo-po-list" style="margin-top:16px"></div>
@@ -935,6 +935,21 @@ async function fetchEmpModuleData(){
 function empDeptName(id){const d=C_EMPDEPT.find(x=>x[0]===id);return d?d[1]:''}
 function empById(id){return C_EMPLOYEES.find(e=>e[0]===id)}
 function empPOExpiryDate(po){return po[5]||po[4]}
+function empPOMonthRange(po){
+  const startM=(po[3]||'').slice(0,7)
+  if(!startM) return []
+  const endD=empPOExpiryDate(po)
+  const endM=endD?endD.slice(0,7):currentMonthKey()
+  return monthsFromTo(startM,endM)
+}
+function empApprovedMonthsSet(po){
+  const raw=(po[9]||'').trim()
+  if(raw) return new Set(raw.split(',').map(m=>m.trim()).filter(Boolean))
+  if(po[6]==='Approved') return new Set(empPOMonthRange(po))
+  return new Set()
+}
+const THAI_MONTH_ABBR=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
+function fmtMonthAbbr(m){const parts=(m||'').split('-');const mi=parseInt(parts[1],10)-1;return (THAI_MONTH_ABBR[mi]||m)+(parts[0]?parts[0].slice(2):'')}
 function refreshEmpDatalist(){
   document.getElementById('empDatalist').innerHTML=C_EMPLOYEES.map(e=>`<option value="${esc(e[0])} — ${esc(e[1]||'')}">`).join('')
 }
@@ -974,7 +989,8 @@ function poItemsForEmpMonth(empId,month){
 function fmtDateShort(d){ if(!d) return '—'; const p=d.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0].slice(2) : d }
 function empPOCardHTML(po,highlightDeptId){
   const items=C_EMPPO_ITEMS.filter(it=>it[0]===po[0])
-  const approved=po[6]==='Approved'
+  const approvedMonths=empApprovedMonthsSet(po)
+  const monthRange=empPOMonthRange(po)
   const itemsHTML=items.map(it=>{
     const emp=empById(it[1])
     const dim=highlightDeptId && emp && emp[2]!==highlightDeptId
@@ -983,14 +999,16 @@ function empPOCardHTML(po,highlightDeptId){
       <div class="range mono">${fmtDateShort(it[3])} – ${fmtDateShort(it[4])}</div>
     </div>`
   }).join('')
+  const monthBtns=monthRange.length?monthRange.map(m=>{
+    const on=approvedMonths.has(m)
+    return `<button type="button" class="btn ${on?'btn-green':'btn-ghost'} btn-sm" style="padding:4px 8px;font-size:11px" onclick="toggleEmpPOMonth('${po[0]}','${m}')" title="${m}">${on?'✅':'⏳'} ${fmtMonthAbbr(m)}</button>`
+  }).join(''):'<span style="font-size:12px;color:var(--muted)">ไม่มีวันเริ่มต้น PO — ไม่สามารถแยกอนุมัติตามเดือนได้</span>'
   return `<div class="pocard">
     <div class="po-top">
       <div><div class="po-id mono">${esc(po[0]||'')}</div><div class="po-meta">${esc(po[1]||'ไม่ระบุลูกค้า')} · ${fmtDateShort(po[3])} – ${fmtDateShort(po[4])}${po[5]?' · หมดอายุ '+fmtDateShort(po[5]):''} · ${items.length} รายการ</div></div>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-ghost btn-sm" onclick="openEmpPOEdit('${po[0]}')">✏️ แก้ไข</button>
-        <button class="btn ${approved?'btn-amber':'btn-green'} btn-sm" onclick="toggleEmpPOStatus('${po[0]}')">${approved?'↩️ Wait Team Leader':'✅ Approve'}</button>
-      </div>
+      <button class="btn btn-ghost btn-sm" onclick="openEmpPOEdit('${po[0]}')">✏️ แก้ไข</button>
     </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">${monthBtns}</div>
     <div class="po-items">${itemsHTML||'<div style="padding:10px 16px;font-size:12px;color:var(--muted)">ไม่มีพนักงานใน PO นี้</div>'}</div>
   </div>`
 }
@@ -1005,9 +1023,9 @@ async function loadEmpDash(){
 function renderEmpDash(){
   const month=document.getElementById('empdash-month').value||currentMonthKey()
   const active=C_EMPLOYEES.filter(e=>employeeStatusAtMonth(e,month)==='active')
-  const monthPOs=C_EMPPO.filter(po=>po[3]&&rangeOverlapsMonth(po[3],po[4],month))
-  const approvedList=monthPOs.filter(po=>po[6]==='Approved')
-  const waitingList=monthPOs.filter(po=>po[6]!=='Approved')
+  const monthPOs=C_EMPPO.filter(po=>po[3]&&rangeOverlapsMonth(po[3],empPOExpiryDate(po),month))
+  const approvedList=monthPOs.filter(po=>empApprovedMonthsSet(po).has(month))
+  const waitingList=monthPOs.filter(po=>!empApprovedMonthsSet(po).has(month))
 
   const yearStart=month.slice(0,4)+'-01'
   const ytdMonths=monthsFromTo(yearStart,month)
@@ -1296,7 +1314,9 @@ function exportEmpDept(deptId){
     }else{
       items.forEach(it=>{
         const po=C_EMPPO.find(p=>p[0]===it[0])
-        rows.push([e[0],e[1]||'',empDeptName(e[2])||'',resigned?'Resigned':'Active',it[0],it[3]?it[3].slice(0,7):'',it[3]||'',it[4]||'',po&&po[6]==='Approved'?'Approved':'Wait Team Leader'])
+        const refMonth=month||(it[3]?it[3].slice(0,7):'')
+        const isApproved=po&&refMonth&&empApprovedMonthsSet(po).has(refMonth)
+        rows.push([e[0],e[1]||'',empDeptName(e[2])||'',resigned?'Resigned':'Active',it[0],it[3]?it[3].slice(0,7):'',it[3]||'',it[4]||'',isApproved?'Approved':'Wait Team Leader'])
       })
     }
   })
@@ -1421,15 +1441,16 @@ function renderEmpAcceptPOList(){
   const relIds={}
   C_EMPPO_ITEMS.forEach(it=>{const emp=empById(it[1]);if(emp&&emp[2]===empAcceptDept) relIds[it[0]]=true})
   const rel=C_EMPPO.filter(po=>relIds[po[0]]).slice().sort((a,b)=>a[0]<b[0]?-1:1)
-  let html=`<div class="card" style="padding:14px 18px;margin-bottom:12px"><strong>PO ที่เกี่ยวข้องกับแผนก ${esc(dept?dept[1]:'')}</strong> <span style="font-size:12px;color:var(--muted)">— กด Approve เพื่ออนุมัติทั้งใบ พนักงานทุกคนในใบนั้นได้สถานะตามไปอัตโนมัติ</span></div>`
+  let html=`<div class="card" style="padding:14px 18px;margin-bottom:12px"><strong>PO ที่เกี่ยวข้องกับแผนก ${esc(dept?dept[1]:'')}</strong> <span style="font-size:12px;color:var(--muted)">— กดเดือนเพื่ออนุมัติ/ยกเลิกอนุมัติแยกรายเดือน</span></div>`
   html+=rel.length?rel.map(po=>empPOCardHTML(po,empAcceptDept)).join(''):`<div class="card" style="padding:24px;text-align:center;color:var(--muted)">ยังไม่มี PO ที่เกี่ยวข้องกับแผนกนี้</div>`
   el.innerHTML=html
 }
-async function toggleEmpPOStatus(poNo){
-  const r=await api('PATCH',`/api/emp-po/${enc(poNo)}/status`)
+async function toggleEmpPOMonth(poNo,month){
+  const r=await api('PATCH',`/api/emp-po/${enc(poNo)}/month`,{month})
   if(r.ok){
-    toast(r.status==='Approved'?'อนุมัติแล้ว ✅':'เปลี่ยนเป็น Wait Team Leader','success')
-    await fetchEmpModuleData()
+    const po=C_EMPPO.find(p=>p[0]===poNo)
+    if(po) po[9]=r.approvedMonths
+    toast(`${fmtMonthAbbr(month)} ${(r.approvedMonths||'').split(',').includes(month)?'อนุมัติแล้ว ✅':'ยกเลิกอนุมัติแล้ว'}`,'success')
     if(document.getElementById('page-emp-dash').classList.contains('active')) renderEmpDash()
     else if(document.getElementById('page-emp-po-mgmt').classList.contains('active')) renderEmpPOMgmtList()
     else if(document.getElementById('page-emp-po').classList.contains('active')) renderEmpAcceptPOList()
