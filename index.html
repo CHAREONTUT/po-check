@@ -1154,6 +1154,7 @@ async function loadEmpDept(){
 function renderEmpDeptList(){
   const q=(document.getElementById('empdept-s').value||'').toLowerCase()
   const list=C_EMPDEPT.filter(d=>!q||(d[1]||'').toLowerCase().indexOf(q)>-1||(d[2]||'').toLowerCase().indexOf(q)>-1)
+    .slice().sort((a,b)=>(a[1]||'').localeCompare(b[1]||'','th'))
   document.getElementById('empdept-list').innerHTML=list.length?list.map(d=>
     `<button type="button" class="deptrow${empDeptSelected===d[0]?' selected':''}" onclick="selectEmpDept('${d[0]}')">
       <span class="rname">${esc(d[1]||d[0])}</span>
