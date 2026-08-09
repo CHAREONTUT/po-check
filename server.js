@@ -283,22 +283,32 @@ app.post('/api/emp-employees/bulk-department',auth,async(req,res)=>{
     if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
     const str=v=>(v===null||v===undefined)?'':String(v).trim()
     const[emps,depts]=await Promise.all([readSheet('EMPLOYEES!A2:G'),readSheet('DEPARTMENTS!A2:E')])
-    let updated=0;const notFoundIds=[];const deptNotFoundIds=[]
+    const now=new Date().toLocaleString('th-TH')
+    let updated=0,deptCreated=0,dCounter=0;const notFoundIds=[];const updateData=[];const newDeptRows=[]
     for(const r of rows){
       const id=str(r['Employee ID']??r['EmployeeID']??r['employee id']??'')
       if(!id) continue
       const idx=emps.findIndex(e=>e[0]===id)
       if(idx===-1){notFoundIds.push(id);continue}
       const deptName=str(r['แผนก']??r['Department']??r['department']??'')
-      const dept=depts.find(d=>str(d[1]).toLowerCase()===deptName.toLowerCase())
-      if(!dept){deptNotFoundIds.push(id);continue}
+      if(!deptName) continue
+      let dept=depts.find(d=>str(d[1]).toLowerCase()===deptName.toLowerCase())
+      if(!dept){
+        dept=['DEPT'+Date.now()+(dCounter++),deptName,'',req.user.name,now]
+        depts.push(dept)
+        newDeptRows.push(dept)
+        deptCreated++
+      }
       const row=[...emps[idx]];row[2]=dept[0]
-      await updateRow('EMPLOYEES',idx+2,row.slice(0,7))
+      updateData.push({range:`EMPLOYEES!A${idx+2}`,values:[row.slice(0,7)]})
       emps[idx]=row
       updated++
     }
-    await log(req.user,'EMP_BULK_DEPT',`อัปเดตแผนกพนักงาน: สำเร็จ ${updated} ไม่พบพนักงาน ${notFoundIds.length} ไม่พบแผนก ${deptNotFoundIds.length}`)
-    res.json({ok:true,updated,notFoundIds,deptNotFoundIds})
+    const sheets=google.sheets({version:'v4',auth:ga()})
+    if(newDeptRows.length) await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'DEPARTMENTS!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newDeptRows}})
+    if(updateData.length) await sheets.spreadsheets.values.batchUpdate({spreadsheetId:SHEET_ID,requestBody:{valueInputOption:'USER_ENTERED',data:updateData}})
+    await log(req.user,'EMP_BULK_DEPT',`อัปเดตแผนกพนักงาน: สำเร็จ ${updated} ไม่พบพนักงาน ${notFoundIds.length} สร้างแผนกใหม่ ${deptCreated}`)
+    res.json({ok:true,updated,notFoundIds,deptCreated})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
 app.patch('/api/emp-employees/:id/department',auth,async(req,res)=>{

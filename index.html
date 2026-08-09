@@ -857,8 +857,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <div style="background:#FDECDC;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#A8460B;line-height:1.8">
       📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
       <strong>Employee ID | แผนก</strong><br>
-      <span style="color:var(--muted);font-size:12px">• Employee ID ต้องมีอยู่แล้วในระบบ (ไม่สร้างพนักงานใหม่จากไฟล์นี้)<br>
-      • ชื่อแผนกต้องตรงกับที่สร้างไว้แล้วในหน้า "แผนก" — ถ้าไม่ตรงหรือไม่พบพนักงาน แถวนั้นจะถูกข้าม</span>
+      <span style="color:var(--muted);font-size:12px">• Employee ID ต้องมีอยู่แล้วในระบบ (ไม่สร้างพนักงานใหม่จากไฟล์นี้ — ถ้าไม่พบ แถวนั้นจะถูกข้าม)<br>
+      • ถ้าชื่อแผนกยังไม่มีในระบบ ระบบจะ<strong>สร้างแผนกใหม่ให้อัตโนมัติ</strong>ตามชื่อในไฟล์ (ตรวจสอบตัวสะกดให้ดีก่อนอัปโหลด)</span>
     </div>
     <div class="upload-zone" onclick="document.getElementById('emp-dept-bulk-file').click()">
       <input type="file" id="emp-dept-bulk-file" accept=".xlsx,.xls,.csv" onchange="handleEmpDeptBulkFile(event)">
@@ -1596,8 +1596,8 @@ async function submitEmpDeptBulk(){
   const r=await api('POST','/api/emp-employees/bulk-department',{rows:EMP_DEPT_BULK_DATA})
   if(r.ok){
     const parts=[`อัปเดตสำเร็จ ${r.updated} คน`]
+    if(r.deptCreated) parts.push(`สร้างแผนกใหม่ ${r.deptCreated} แผนก`)
     if(r.notFoundIds&&r.notFoundIds.length) parts.push(`ไม่พบพนักงาน ${r.notFoundIds.length} คน`)
-    if(r.deptNotFoundIds&&r.deptNotFoundIds.length) parts.push(`ไม่พบชื่อแผนก ${r.deptNotFoundIds.length} คน`)
     toast(parts.join(' · '),'success')
     closeM('m-emp-dept-bulk');await loadEmpDept();renderEmpDeptList()
   }else toast(r.error||'เกิดข้อผิดพลาด','error')
