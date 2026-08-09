@@ -162,6 +162,34 @@ app.post('/api/emp-departments',auth,async(req,res)=>{
     res.json({ok:true,id})
   }catch(e){res.status(500).json({ok:false,error:e.message})}
 })
+app.post('/api/emp-departments/bulk',auth,async(req,res)=>{
+  try{
+    const{rows}=req.body
+    if(!rows||!rows.length) return res.status(400).json({ok:false,error:'ไม่มีข้อมูล'})
+    if(rows.length>1000) return res.status(400).json({ok:false,error:'อัปโหลดได้สูงสุด 1000 แถวต่อครั้ง'})
+    const str=v=>(v===null||v===undefined)?'':String(v).trim()
+    const depts=await readSheet('DEPARTMENTS!A2:E')
+    const now=new Date().toLocaleString('th-TH')
+    let added=0,dCounter=0;const skippedNames=[];const newDeptRows=[]
+    for(const r of rows){
+      const name=str(r['แผนก']??r['Department']??r['ชื่อแผนก']??'')
+      if(!name) continue
+      const head=str(r['หัวหน้าแผนก']??r['Head']??r['head']??'')
+      const dup=depts.find(d=>str(d[1]).toLowerCase()===name.toLowerCase())
+      if(dup){skippedNames.push(name);continue}
+      const dept=['DEPT'+Date.now()+(dCounter++),name,head,req.user.name,now]
+      depts.push(dept)
+      newDeptRows.push(dept)
+      added++
+    }
+    if(newDeptRows.length){
+      const sheets=google.sheets({version:'v4',auth:ga()})
+      await sheets.spreadsheets.values.append({spreadsheetId:SHEET_ID,range:'DEPARTMENTS!A1',valueInputOption:'USER_ENTERED',requestBody:{values:newDeptRows}})
+    }
+    await log(req.user,'EMP_BULK_CREATE_DEPT',`นำเข้าแผนก: เพิ่ม ${added} ข้าม (ซ้ำ) ${skippedNames.length}`)
+    res.json({ok:true,added,skippedNames})
+  }catch(e){res.status(500).json({ok:false,error:e.message})}
+})
 app.patch('/api/emp-departments/:id',auth,async(req,res)=>{
   try{
     const{name,head}=req.body

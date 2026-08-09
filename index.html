@@ -436,6 +436,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
           <input class="fi2" id="empdept-exportmonth" type="month" style="width:150px;padding:8px 12px;font-size:13px" title="เดือนที่ต้องการส่งออก">
           <button class="btn btn-green" onclick="exportEmpDept(null)">↓ ดาวน์โหลดทั้งหมด (Excel)</button>
           <button class="btn" onclick="openEmpDeptBulk()">📥 อัปเดตแผนกพนักงาน (Excel)</button>
+          <button class="btn" onclick="openEmpDeptImport()">📥 นำเข้าแผนก (Excel)</button>
           <button class="btn btn-primary" onclick="openEmpDeptCreate()">+ สร้างแผนก</button>
         </div>
       </div>
@@ -669,6 +670,33 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
         <tbody id="emp-dept-bulk-preview-body"></tbody></table>
       </div>
       <button class="btn btn-primary" onclick="submitEmpDeptBulk()" style="margin-top:14px">📥 อัปเดตข้อมูล</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODAL: Bulk-import departments via Excel -->
+<div class="mbg" id="m-emp-dept-import"><div class="modal" style="max-width:560px">
+  <div class="modal-hdr"><div class="modal-title">📥 นำเข้าแผนก (Excel)</div><button class="modal-x" onclick="closeM('m-emp-dept-import')">✕</button></div>
+  <div class="modal-body">
+    <div style="background:#FDECDC;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#A8460B;line-height:1.8">
+      📌 รูปแบบ Header ที่ต้องใช้ใน Excel:<br>
+      <strong>แผนก | หัวหน้าแผนก</strong><br>
+      <span style="color:var(--muted);font-size:12px">• รองรับสูงสุด 1000 แถวต่อครั้ง<br>
+      • หัวหน้าแผนก ไม่บังคับ เว้นว่างได้<br>
+      • ถ้าชื่อแผนกซ้ำกับที่มีอยู่แล้วในระบบ (ไม่สนตัวพิมพ์เล็ก/ใหญ่) แถวนั้นจะถูกข้าม ไม่ทับข้อมูลเดิม</span>
+    </div>
+    <div class="upload-zone" onclick="document.getElementById('emp-dept-import-file').click()">
+      <input type="file" id="emp-dept-import-file" accept=".xlsx,.xls,.csv" onchange="handleEmpDeptImportFile(event)">
+      <div class="upload-icon">📂</div>
+      <div class="upload-hint">คลิกหรือลากไฟล์ Excel มาวางที่นี่<br><strong>.xlsx / .xls / .csv</strong></div>
+    </div>
+    <div id="emp-dept-import-preview" style="margin-top:16px;display:none">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px" id="emp-dept-import-preview-title"></div>
+      <div class="tbl-wrap" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px">
+        <table><thead><tr><th>แผนก</th><th>หัวหน้าแผนก</th></tr></thead>
+        <tbody id="emp-dept-import-preview-body"></tbody></table>
+      </div>
+      <button class="btn btn-primary" onclick="submitEmpDeptImport()" style="margin-top:14px">📥 นำเข้าข้อมูล</button>
     </div>
   </div>
 </div></div>
@@ -1275,6 +1303,50 @@ async function submitEmpDeptBulk(){
     if(r.notFoundIds&&r.notFoundIds.length) parts.push(`ไม่พบพนักงาน ${r.notFoundIds.length} คน`)
     toast(parts.join(' · '),'success')
     closeM('m-emp-dept-bulk');await loadEmpDept();renderEmpDeptList()
+  }else toast(r.error||'เกิดข้อผิดพลาด','error')
+}
+function openEmpDeptImport(){
+  EMP_DEPT_IMPORT_DATA=[]
+  document.getElementById('emp-dept-import-file').value=''
+  document.getElementById('emp-dept-import-preview').style.display='none'
+  document.getElementById('m-emp-dept-import').classList.add('show')
+}
+let EMP_DEPT_IMPORT_DATA=[]
+function handleEmpDeptImportFile(e){const f=e.target.files[0];if(f)processEmpDeptImport(f)}
+function processEmpDeptImport(file){
+  loadXLSX(()=>{
+    const reader=new FileReader()
+    reader.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:'array'})
+      const ws=wb.Sheets[wb.SheetNames[0]]
+      let headerRow=0
+      const range=XLSX.utils.decode_range(ws['!ref']||'A1:F10')
+      for(let r=0;r<=Math.min(5,range.e.r);r++){
+        let txt=''
+        for(let c=0;c<=5;c++){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell)txt+=String(cell.v||'').trim()+' '}
+        if(txt.includes('แผนก')||txt.includes('หัวหน้า')){headerRow=r;break}
+      }
+      const data=XLSX.utils.sheet_to_json(ws,{defval:'',range:headerRow})
+      const norm=data.map(row=>{const nr={};for(const[k,v]of Object.entries(row))nr[String(k).trim()]=v;return nr})
+      EMP_DEPT_IMPORT_DATA=norm.slice(0,1000)
+      document.getElementById('emp-dept-import-preview-body').innerHTML=norm.slice(0,10).map(r=>`<tr>
+        <td style="font-weight:600;color:var(--blue)">${esc(r['แผนก']||r['Department']||r['ชื่อแผนก']||'')}</td>
+        <td>${esc(r['หัวหน้าแผนก']||r['Head']||'')}</td>
+      </tr>`).join('')
+      document.getElementById('emp-dept-import-preview-title').textContent=`พบ ${norm.length} แถว (แสดง 10 แรก)${norm.length>1000?' — จะนำเข้าเฉพาะ 1000 แถวแรก':''}`
+      document.getElementById('emp-dept-import-preview').style.display=''
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+async function submitEmpDeptImport(){
+  if(!EMP_DEPT_IMPORT_DATA.length){toast('ไม่มีข้อมูล','error');return}
+  const r=await api('POST','/api/emp-departments/bulk',{rows:EMP_DEPT_IMPORT_DATA})
+  if(r.ok){
+    const parts=[`เพิ่มแผนกใหม่สำเร็จ ${r.added} แผนก`]
+    if(r.skippedNames&&r.skippedNames.length) parts.push(`ข้าม (ซ้ำ) ${r.skippedNames.length} แผนก`)
+    toast(parts.join(' · '),'success')
+    closeM('m-emp-dept-import');await loadEmpDept();renderEmpDeptList()
   }else toast(r.error||'เกิดข้อผิดพลาด','error')
 }
 function exportEmpDept(deptId){
