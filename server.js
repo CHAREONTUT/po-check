@@ -341,6 +341,8 @@ app.post('/api/ot',auth,async(req,res)=>{
     const{poNum,empName,poOt,docDate,otPay,otBill,otMonth,yearRemark}=req.body
     if(!poNum||!empName||!docDate||!otPay||!otBill) return res.status(400).json({ok:false,error:'กรุณากรอกข้อมูลที่บังคับ (*)'})
     const month=otMonth||docDate.slice(0,7)
+    const existing=await readSheet('OT!A2:K')
+    if(existing.some(r=>r[0]===poNum && r[1]===empName && r[7]===month)) return res.status(400).json({ok:false,error:'เดือนนี้ถูกเบิกไปแล้วสำหรับ PO และพนักงานคนนี้'})
     await appendRow('OT',[poNum,empName,poOt||'',docDate,otPay,otBill,Number(otBill)-Number(otPay),month,'ยังไม่เรียกเก็บ',req.user.name,yearRemark||''])
     await log(req.user,'CREATE_OT',`บันทึก OT ${empName} PO: ${poNum} เดือน: ${month}`)
     res.json({ok:true})

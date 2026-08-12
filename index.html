@@ -267,6 +267,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <div class="page" id="page-alert">
       <div class="topbar"><div><div class="page-title">🔔 PO ใกล้หมดสัญญา</div><div class="page-sub">ภายใน 21 วัน</div></div></div>
       <div class="card"><div class="card-body" id="al-page"></div></div>
+      <div class="topbar" style="margin-top:20px"><div><div class="page-title">⚠️ พนักงานไม่มี PO</div><div class="page-sub">สะสมตั้งแต่ 1 ม.ค. – ปัจจุบัน</div></div></div>
+      <div class="card"><div class="card-body" id="nopo-page"></div></div>
     </div>
 
 
@@ -381,6 +383,8 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
     <div class="page" id="page-ot-list">
       <div class="topbar"><div><div class="page-title">📊 รายการล่วงเวลาทำงานทั้งหมด</div></div>
         <div class="topbar-right">
+          <input class="fi2" id="ot-month-f" type="month" style="width:150px;padding:8px 12px;font-size:13px" onchange="renderOTT()">
+          <select class="fi2" id="ot-dept-f" style="width:160px;padding:8px 12px;font-size:13px" onchange="renderOTT()"><option value="">ทุกแผนก</option></select>
           <input class="s-in" id="ot-f" placeholder="🔍 กรองชื่อพนักงาน" style="width:170px" oninput="renderOTT()">
           <button class="btn btn-green" onclick="exportOT()">📥 Export Excel</button>
         </div>
@@ -398,6 +402,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
         <div><div class="page-title">⊞ Dashboard (พนักงาน & PO)</div><div class="page-sub">ภาพรวมสถานะพนักงานและ PO รายเดือน</div></div>
         <div class="topbar-right">
           <input class="fi2" id="empdash-month" type="month" style="width:150px;padding:8px 12px;font-size:13px" onchange="renderEmpDash()">
+          <select class="fi2" id="empdash-dept" style="width:160px;padding:8px 12px;font-size:13px" onchange="renderEmpDash()"><option value="">ทุกแผนก</option></select>
           <button class="btn btn-ghost" onclick="loadAll();loadEmpDash()">🔄 รีเฟรช</button>
         </div>
       </div>
@@ -451,6 +456,7 @@ tbody td{padding:10px 12px;border-bottom:1px solid #F5E9D6;vertical-align:middle
         <div class="topbar-right"><button class="btn btn-primary" onclick="openEmpPOCreate()">+ สร้าง PO</button></div>
       </div>
       <div class="s-wrap"><input class="s-in" id="empmgmt-s" placeholder="ค้นหาเลขที่ PO..." oninput="renderEmpPOMgmtList()"></div>
+      <div id="empmgmt-tabs" style="display:flex;gap:8px;margin:0 0 14px"></div>
       <div id="empmgmt-list"></div>
     </div>
 
@@ -834,7 +840,7 @@ function loadXLSX(cb){
 
 let TOKEN=localStorage.getItem('po_token')||''
 let USER=JSON.parse(localStorage.getItem('po_user')||'null')
-let C={ot:[],alerts:[],logs:[]}
+let C={ot:[],alerts:[],logs:[],noPoEmployees:[]}
 let DEL_TARGET='',EDIT_OT_IDX=0
 
 function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show')}
@@ -898,6 +904,12 @@ async function loadAll(){
                  daysLeft:Math.ceil((parseDate(empPOExpiryDate(po))-today)/86400000)}))
       .filter(a=>a.endDate&&a.daysLeft>=0&&a.daysLeft<=21)
       .sort((a,b)=>a.daysLeft-b.daysLeft)
+    const curMonth=currentMonthKey(), yearStart=curMonth.slice(0,4)+'-01'
+    const ytdMonths=monthsFromTo(yearStart,curMonth)
+    C.noPoEmployees=C_EMPLOYEES.filter(e=>employeeStatusAtMonth(e,curMonth)==='active')
+      .map(e=>({emp:e,gaps:ytdMonths.filter(m=>employeeStatusAtMonth(e,m)==='active'&&poItemsForEmpMonth(e[0],m).length===0)}))
+      .filter(x=>x.gaps.length)
+      .sort((a,b)=>b.gaps.length-a.gaps.length)
     renderAll()
   }catch(e){toast('โหลดข้อมูลไม่ได้','error')}
   spin(false)
@@ -908,7 +920,7 @@ async function loadLogs(){
 function renderAll(){renderStats();renderDashOT();renderAlPage();renderOTT();populateOTPOList()}
 
 function renderStats(){
-  document.getElementById('al-badge').textContent=C.alerts.length
+  document.getElementById('al-badge').textContent=C.alerts.length+C.noPoEmployees.length
 }
 function renderDashOT(){
   const el=document.getElementById('dash-ot')
@@ -947,6 +959,13 @@ function empApprovedMonthsSet(po){
   if(raw) return new Set(raw.split(',').map(m=>m.trim()).filter(Boolean))
   if(po[6]==='Approved') return new Set(empPOMonthRange(po))
   return new Set()
+}
+function empPOTabOf(po){
+  const exp=empPOExpiryDate(po), today=new Date().toISOString().slice(0,10)
+  if(exp && exp<today) return 'finished'
+  const range=empPOMonthRange(po), approved=empApprovedMonthsSet(po)
+  if(range.length && range.every(m=>approved.has(m))) return 'approved'
+  return 'all'
 }
 const THAI_MONTH_ABBR=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
 function fmtMonthAbbr(m){const parts=(m||'').split('-');const mi=parseInt(parts[1],10)-1;return (THAI_MONTH_ABBR[mi]||m)+(parts[0]?parts[0].slice(2):'')}
@@ -1018,12 +1037,23 @@ async function loadEmpDash(){
   await fetchEmpModuleData()
   const el=document.getElementById('empdash-month')
   if(!el.value) el.value=currentMonthKey()
+  const dsel=document.getElementById('empdash-dept')
+  const curDept=dsel.value
+  dsel.innerHTML='<option value="">ทุกแผนก</option>'+C_EMPDEPT.slice().sort((a,b)=>(a[1]||'').localeCompare(b[1]||'','th')).map(d=>`<option value="${esc(d[0])}">${esc(d[1]||d[0])}</option>`).join('')
+  dsel.value=curDept
   renderEmpDash()
 }
 function renderEmpDash(){
   const month=document.getElementById('empdash-month').value||currentMonthKey()
-  const active=C_EMPLOYEES.filter(e=>employeeStatusAtMonth(e,month)==='active')
-  const monthPOs=C_EMPPO.filter(po=>po[3]&&rangeOverlapsMonth(po[3],empPOExpiryDate(po),month))
+  const deptId=document.getElementById('empdash-dept').value
+  let active=C_EMPLOYEES.filter(e=>employeeStatusAtMonth(e,month)==='active')
+  if(deptId) active=active.filter(e=>e[2]===deptId)
+  let monthPOs=C_EMPPO.filter(po=>po[3]&&rangeOverlapsMonth(po[3],empPOExpiryDate(po),month))
+  if(deptId){
+    const relIds={}
+    C_EMPPO_ITEMS.forEach(it=>{const emp=empById(it[1]);if(emp&&emp[2]===deptId) relIds[it[0]]=true})
+    monthPOs=monthPOs.filter(po=>relIds[po[0]])
+  }
   const approvedList=monthPOs.filter(po=>empApprovedMonthsSet(po).has(month))
   const waitingList=monthPOs.filter(po=>!empApprovedMonthsSet(po).has(month))
 
@@ -1330,9 +1360,18 @@ async function loadEmpPOMgmt(){
   await fetchEmpModuleData()
   renderEmpPOMgmtList()
 }
+let empMgmtTab='all'
+function setEmpMgmtTab(t){empMgmtTab=t;renderEmpPOMgmtList()}
 function renderEmpPOMgmtList(){
   const q=(document.getElementById('empmgmt-s').value||'').toLowerCase()
-  const list=C_EMPPO.filter(po=>!q||(po[0]||'').toLowerCase().indexOf(q)>-1).slice().sort((a,b)=>a[0]<b[0]?-1:1)
+  const searched=C_EMPPO.filter(po=>!q||(po[0]||'').toLowerCase().indexOf(q)>-1)
+  const counts={all:0,finished:0,approved:0}
+  searched.forEach(po=>counts[empPOTabOf(po)]++)
+  const tabDefs=[['all','ALL PO'],['finished','PO จบแล้ว'],['approved','Approved ครบ']]
+  document.getElementById('empmgmt-tabs').innerHTML=tabDefs.map(([key,label])=>
+    `<button type="button" class="btn ${empMgmtTab===key?'btn-primary':'btn-ghost'} btn-sm" onclick="setEmpMgmtTab('${key}')">${label} (${counts[key]})</button>`
+  ).join('')
+  const list=searched.filter(po=>empPOTabOf(po)===empMgmtTab).slice().sort((a,b)=>a[0]<b[0]?-1:1)
   document.getElementById('empmgmt-list').innerHTML=list.length?list.map(po=>empPOCardHTML(po,null)).join(''):`<div class="card" style="padding:24px;text-align:center;color:var(--muted)">ไม่พบ PO${q?' เลขที่ "'+esc(q)+'"':''}</div>`
 }
 let EMP_PO_DRAFT_ITEMS=[]
@@ -1439,7 +1478,8 @@ async function loadEmpPO(){
   renderEmpAcceptDeptList()
 }
 function renderEmpAcceptDeptList(){
-  document.getElementById('emppo-dept-list').innerHTML=C_EMPDEPT.length?C_EMPDEPT.map(d=>
+  const sorted=C_EMPDEPT.slice().sort((a,b)=>(a[2]||a[1]||'').localeCompare(b[2]||b[1]||'','th'))
+  document.getElementById('emppo-dept-list').innerHTML=sorted.length?sorted.map(d=>
     `<button type="button" class="deptrow${empAcceptDept===d[0]?' selected':''}" onclick="selectEmpAcceptDept('${d[0]}')">
       <span class="rname">${esc(d[2]||d[1]||d[0])}</span>
       <svg class="chev" width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M7.5 4.5l6 5.5-6 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1481,12 +1521,35 @@ function renderAlPage(){
     <div style="font-size:11px;color:var(--muted)">ลูกค้า: ${a.client||'—'} · วันสิ้นสุด: ${a.endDate}</div></div>
     <div class="days-badge ${a.daysLeft<=7?'db-r':'db-a'}">เหลือ ${a.daysLeft} วัน</div></div>`).join('')
   :`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">ไม่มี PO ใกล้หมดสัญญา</div></div>`
+  document.getElementById('nopo-page').innerHTML=C.noPoEmployees.length?C.noPoEmployees.map(x=>`
+    <div class="al-row"><div class="dot dot-r"></div>
+    <div style="flex:1"><div style="font-size:13px;font-weight:700">${esc(x.emp[1])} <span class="mono" style="color:var(--muted);font-weight:400">(${esc(x.emp[0])})</span></div>
+    <div style="font-size:11px;color:var(--muted)">แผนก: ${esc(empDeptName(x.emp[2])||'—')}</div></div>
+    <div class="days-badge db-r">ขาด ${x.gaps.length} เดือน</div></div>`).join('')
+  :`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">พนักงานทุกคนมี PO ครบตั้งแต่ต้นปี</div></div>`
 }
 
+function otRowDeptId(poNum,empName){
+  const it=C_EMPPO_ITEMS.find(it=>it[0]===poNum && it[2]===empName)
+  const emp=it?empById(it[1]):C_EMPLOYEES.find(e=>e[1]===empName)
+  return emp?(emp[2]||''):''
+}
+function populateOTDeptFilter(){
+  const dsel=document.getElementById('ot-dept-f')
+  if(dsel.options.length>1) return
+  dsel.innerHTML='<option value="">ทุกแผนก</option>'+C_EMPDEPT.slice().sort((a,b)=>(a[1]||'').localeCompare(b[1]||'','th')).map(d=>`<option value="${esc(d[0])}">${esc(d[1]||d[0])}</option>`).join('')
+}
 function renderOTT(){
+  populateOTDeptFilter()
   const f=(document.getElementById('ot-f').value||'').toLowerCase()
-  const rows=C.ot.filter(r=>!f||(r[1]||'').toLowerCase().includes(f))
-  document.getElementById('ot-tbody').innerHTML=rows.length?rows.map((r,i)=>{
+  const monthF=document.getElementById('ot-month-f').value
+  const deptF=document.getElementById('ot-dept-f').value
+  const rows=C.ot.map((r,idx)=>({r,idx})).filter(({r})=>
+    (!f||(r[1]||'').toLowerCase().includes(f)) &&
+    (!monthF||r[7]===monthF) &&
+    (!deptF||otRowDeptId(r[0],r[1])===deptF)
+  )
+  document.getElementById('ot-tbody').innerHTML=rows.length?rows.map(({r,idx})=>{
     const col=r[8]==='เรียกเก็บแล้ว'
     return`<tr>
       <td style="padding-left:12px;color:var(--muted)">${r[0]||'—'}${r[10]?`<span class="tag t-amber" style="margin-left:4px">ปี ${r[10]}</span>`:''}</td>
@@ -1497,19 +1560,19 @@ function renderOTT(){
       <td style="color:var(--green);font-weight:700">฿${num(r[4])}</td>
       <td style="color:var(--coral);font-weight:700">฿${num(r[5])}</td>
       <td style="color:var(--blue);font-weight:700">฿${num(r[6])}</td>
-      <td><div class="ck-wrap" onclick="toggleCol(${i+1},this)">
+      <td><div class="ck-wrap" onclick="toggleCol(${idx+1},this)">
         <div class="ck-box ${col?'on':''}"></div>
         <span class="ck-label" style="${col?'color:var(--green);font-weight:600':'color:var(--muted)'}">${col?'เรียกเก็บแล้ว':'ยังไม่เรียกเก็บ'}</span>
       </div></td>
       <td><div style="display:flex;gap:4px">
-        <button class="btn btn-amber btn-sm" onclick="openEditOT(${i+1})">✏️</button>
-        <button class="btn btn-red btn-sm" onclick="deleteOT(${i+1})">🗑️</button>
+        <button class="btn btn-amber btn-sm" onclick="openEditOT(${idx+1})">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="deleteOT(${idx+1})">🗑️</button>
       </div></td>
     </tr>`}).join('')
   :`<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--muted)">ไม่มีข้อมูล</td></tr>`
-  const totalPay=rows.reduce((s,r)=>s+Number(r[4]||0),0)
-  const totalBill=rows.reduce((s,r)=>s+Number(r[5]||0),0)
-  const totalProfit=rows.reduce((s,r)=>s+Number(r[6]||0),0)
+  const totalPay=rows.reduce((s,{r})=>s+Number(r[4]||0),0)
+  const totalBill=rows.reduce((s,{r})=>s+Number(r[5]||0),0)
+  const totalProfit=rows.reduce((s,{r})=>s+Number(r[6]||0),0)
   document.getElementById('ot-tfoot').innerHTML=rows.length?`<tr style="background:#FDF6EC;border-top:2px solid var(--border)">
     <td colspan="5" style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--muted)">รวม ${rows.length} รายการ</td>
     <td style="padding:10px 12px;color:var(--green);font-weight:700">฿${num(totalPay)}</td>
@@ -1607,7 +1670,8 @@ function onOTPOChange(val){
   if(!emps.length){section.style.display='none';noEmp.style.display='';return}
   noEmp.style.display='none';section.style.display=''
   document.getElementById('ot-emp-tbody').innerHTML=emps.map(it=>{
-    const months=getMonthsInRange(it[3],it[4])
+    const claimed=new Set(C.ot.filter(r=>r[0]===poNum && r[1]===it[2]).map(r=>r[7]))
+    const months=getMonthsInRange(it[3],it[4]).filter(m=>!claimed.has(m))
     const opts=months.map(m=>`<option value="${m}">${m}</option>`).join('')
     return`<tr>
       <td style="padding:8px 12px;font-weight:600">${it[2]}</td>
