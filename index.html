@@ -961,10 +961,10 @@ function empApprovedMonthsSet(po){
   return new Set()
 }
 function empPOTabOf(po){
-  const exp=empPOExpiryDate(po), today=new Date().toISOString().slice(0,10)
-  if(exp && exp<today) return 'finished'
   const range=empPOMonthRange(po), approved=empApprovedMonthsSet(po)
   if(range.length && range.every(m=>approved.has(m))) return 'approved'
+  const exp=empPOExpiryDate(po), today=new Date().toISOString().slice(0,10)
+  if(exp && exp<today) return 'finished'
   return 'all'
 }
 const THAI_MONTH_ABBR=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.']
